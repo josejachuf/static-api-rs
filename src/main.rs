@@ -4,7 +4,7 @@ use tokio::io::AsyncReadExt;
 use std::path::PathBuf;
 
 #[handler]
-async fn hello() -> Result<String, anyhow::Error> {
+async fn index(res: &mut Response) -> Result<(), anyhow::Error> {
     let directorio = "json";
 
     let mut contenido = tokio::fs::read_dir(directorio).await?;
@@ -20,10 +20,24 @@ async fn hello() -> Result<String, anyhow::Error> {
 
     let archivos: Vec<String> = archivos
         .into_iter()
-        .map(|path| path.to_string_lossy().to_string())
+        .filter_map(|path| path.file_stem().map(|stem| format!(r#"<li><a href="/api/{}">{}</a></li>"#, stem.to_string_lossy().to_string(), stem.to_string_lossy().to_string())))
         .collect();
 
-    Ok(archivos.join(" - "))
+    let html = format!(r#"
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <title>Static API</title>
+            </head>
+            <body>
+                <h1>Static API</h1>
+                <ul>{}</ul>
+            </body>
+        </html>
+        "#, archivos.join(""));
+
+    res.render(Text::Html(html));
+    Ok(())
 }
 
 
@@ -83,7 +97,7 @@ async fn get_one(req: &mut Request) -> Result<Json<serde_json::Value>, anyhow::E
 async fn main() {
     // tracing_subscriber::fmt().init();
 
-    let router = Router::new().get(hello)
+    let router = Router::new().get(index)
         .push(Router::with_path("api/<f>")
               .get(get_all)
               // .post(post_one)
