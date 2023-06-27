@@ -1,3 +1,4 @@
+use dotenv;
 use salvo::prelude::*;
 use std::io;
 use tokio::io::AsyncReadExt;
@@ -96,6 +97,10 @@ async fn get_one(req: &mut Request) -> Result<Json<serde_json::Value>, anyhow::E
 #[tokio::main]
 async fn main() {
     // tracing_subscriber::fmt().init();
+    dotenv::dotenv().ok();
+
+    let host = std::env::var("IPHOST").unwrap_or("127.0.0.1".to_string());
+    let port = std::env::var("PORT").unwrap_or("5800".to_string());
 
     let router = Router::new().get(index)
         .push(Router::with_path("api/<f>")
@@ -109,6 +114,6 @@ async fn main() {
               )
 
         ;
-    let acceptor = TcpListener::new("127.0.0.1:5800").bind().await;
+    let acceptor = TcpListener::new(format!("{host}:{port}")).bind().await;
     Server::new(acceptor).serve(router).await;
 }

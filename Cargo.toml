@@ -6,6 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+dotenv = "0.15"
 anyhow = "1"
 salvo = { version = "0.44.1", features = ["anyhow"] }
 tokio = { version = "1", features = ["macros"] }
