@@ -1,37 +1,36 @@
 use salvo::prelude::*;
-use std::fs;
-use std::error::Error;
-use std::io::{self, Read};
-
+use std::io;
+use tokio::io::AsyncReadExt;
+use std::path::PathBuf;
 
 #[handler]
-async fn hello() -> &'static str {
+async fn hello() -> Result<String, anyhow::Error> {
     let directorio = "json";
 
-    // Lee el contenido del directorio
-    let contenido = fs::read_dir(directorio)
-        .expect("Error al leer el directorio");
+    let mut contenido = tokio::fs::read_dir(directorio).await?;
+    let mut archivos: Vec<PathBuf> = Vec::new();
 
-    // Itera sobre los elementos del directorio
-    for elemento in contenido {
-        if let Ok(entrada) = elemento {
-            let ruta = entrada.path();
-            let nombre = entrada.file_name();
-
-            // Verifica si es un archivo
-            if ruta.is_file() {
-                println!("Archivo: {:?}", nombre);
-            }
+    while let Some(entrada) = contenido.next_entry().await? {
+        let ruta = entrada.path();
+        let nombre = entrada.file_name();
+        if ruta.is_file() {
+            archivos.push(nombre.into());
         }
     }
-    "Hello World"
+
+    let archivos: Vec<String> = archivos
+        .into_iter()
+        .map(|path| path.to_string_lossy().to_string())
+        .collect();
+
+    Ok(archivos.join(" - "))
 }
 
 
 async fn read_json_from_file(f: String) -> Result<String, io::Error> {
-    let mut json_file = fs::File::open(format!("json/{f}.json"))?;
+    let mut json_file = tokio::fs::File::open(format!("json/{f}.json")).await?;
     let mut json_string = String::new();
-    json_file.read_to_string(&mut json_string)?;
+    json_file.read_to_string(&mut json_string).await?;
     Ok(json_string)
 }
 
@@ -39,8 +38,6 @@ fn convert_string_to_json(json_string: String) -> Result<serde_json::Value, anyh
     let json_value: serde_json::Value = serde_json::from_str(&json_string)?;
     Ok(json_value)
 }
-
-
 
 #[handler]
 async fn get_all(req: &mut Request) -> Result<Json<serde_json::Value>, anyhow::Error> {
@@ -52,15 +49,12 @@ async fn get_all(req: &mut Request) -> Result<Json<serde_json::Value>, anyhow::E
 }
 
 #[handler]
-async fn get_one(req: &mut Request, res: &mut Response) {
+async fn get_one(req: &mut Request) -> Result<Json<serde_json::Value>, anyhow::Error> {
     let file_path = req.param::<String>("f").unwrap();
     let id = req.param::<u64>("id").unwrap();
 
-    let mut file = std::fs::File::open(format!("json/{file_path}.json")).unwrap();
-    let mut contents = String::new();
-    file.read_to_string(&mut contents).unwrap();
-
-    let json_value: serde_json::Value = serde_json::from_str(&contents).unwrap();
+    let json_string = read_json_from_file(file_path).await?;
+    let json_value = convert_string_to_json(json_string)?;
 
     let filtered_item = json_value
         .as_array()
@@ -77,10 +71,10 @@ async fn get_one(req: &mut Request, res: &mut Response) {
         .collect::<Vec<serde_json::Value>>();
 
     if filtered_item.len() > 0 {
-        res.render(Json(&filtered_item[0]));
+        let filtered_item = &filtered_item[0];
+        Ok(Json(filtered_item.clone()))
     } else {
-        // StatusCode::NO_CONTENT;
-        res.render(Json("Not found"));
+        Ok(Json("Not found".into()))
     }
 }
 
