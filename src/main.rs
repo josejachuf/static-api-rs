@@ -1,7 +1,9 @@
 use dotenv;
 use salvo::prelude::*;
 use std::io;
-use tokio::io::AsyncReadExt;
+use tokio::fs::OpenOptions;
+use tokio::io::{AsyncWriteExt, AsyncReadExt};
+
 use std::path::PathBuf;
 
 #[handler]
@@ -42,15 +44,27 @@ async fn index(res: &mut Response) -> Result<(), anyhow::Error> {
 }
 
 
-async fn read_json_from_file(f: String) -> Result<String, io::Error> {
-    let mut json_file = tokio::fs::File::open(format!("data/{f}.json")).await?;
+async fn read_json_from_file(f: &str) -> Result<String, io::Error> {
+    let mut json_file = tokio::fs::File::open(format!("data/{}.json", f)).await?;
     let mut json_string = String::new();
     json_file.read_to_string(&mut json_string).await?;
     Ok(json_string)
 }
 
-fn convert_string_to_json(json_string: String) -> Result<serde_json::Value, anyhow::Error> {
-    let json_value: serde_json::Value = serde_json::from_str(&json_string)?;
+async fn create_empty_json_file(f: &str) -> Result<(), io::Error> {
+    let file_path = format!("data/{}.json", f);
+    let mut file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(file_path)
+        .await?;
+    file.write_all(b"[]").await?;
+    Ok(())
+}
+
+fn convert_string_to_json(json_string: &str) -> Result<serde_json::Value, anyhow::Error> {
+    let json_value: serde_json::Value = serde_json::from_str(json_string)?;
     Ok(json_value)
 }
 
@@ -58,8 +72,15 @@ fn convert_string_to_json(json_string: String) -> Result<serde_json::Value, anyh
 async fn get_all(req: &mut Request) -> Result<Json<serde_json::Value>, anyhow::Error> {
     let file_path = req.param::<String>("f").unwrap();
 
-    let json_string = read_json_from_file(file_path).await?;
-    let json_value = convert_string_to_json(json_string)?;
+    let json_string = match read_json_from_file(&file_path).await {
+        Ok(s) => s,
+        Err(_) => {
+            create_empty_json_file(&file_path).await?;
+            String::from("[]")
+        }
+    };
+
+    let json_value = convert_string_to_json(&json_string)?;
     Ok(Json(json_value))
 }
 
@@ -68,8 +89,14 @@ async fn get_one(req: &mut Request) -> Result<Json<serde_json::Value>, anyhow::E
     let file_path = req.param::<String>("f").unwrap();
     let id = req.param::<u64>("id").unwrap();
 
-    let json_string = read_json_from_file(file_path).await?;
-    let json_value = convert_string_to_json(json_string)?;
+    let json_string = match read_json_from_file(&file_path).await {
+        Ok(s) => s,
+        Err(_) => {
+            create_empty_json_file(&file_path).await?;
+            String::from("[]")
+        }
+    };
+    let json_value = convert_string_to_json(&json_string)?;
 
     let filtered_item = json_value
         .as_array()
@@ -93,6 +120,30 @@ async fn get_one(req: &mut Request) -> Result<Json<serde_json::Value>, anyhow::E
     }
 }
 
+#[handler]
+async fn add_one(req: &mut Request) -> Result<Json<serde_json::Value>, anyhow::Error> {
+    let file_path = req.param::<String>("f").unwrap();
+
+    let json_string = match read_json_from_file(&file_path).await {
+        Ok(s) => s,
+        Err(_) => {
+            create_empty_json_file(&file_path).await?;
+            String::from("[]")
+        }
+    };
+    let mut json_value = convert_string_to_json(&json_string)?;
+
+    let new_item_json = req.parse_body::<serde_json::Value>().await?;
+
+    json_value.as_array_mut().unwrap().push(new_item_json);
+
+    let json_string = serde_json::to_string_pretty(&json_value)?;
+    let file_path = format!("data/{}.json", file_path);
+    tokio::fs::write(file_path, json_string).await?;
+
+    Ok(Json(json_value))
+}
+
 
 #[tokio::main]
 async fn main() {
@@ -105,7 +156,7 @@ async fn main() {
     let router = Router::new().get(index)
         .push(Router::with_path("api/<f>")
               .get(get_all)
-              // .post(post_one)
+              .post(add_one)
               )
         .push(Router::with_path("api/<f>/<id>")
               .get(get_one)
