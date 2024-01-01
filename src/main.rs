@@ -10,18 +10,18 @@ use std::path::PathBuf;
 async fn index(res: &mut Response) -> Result<(), anyhow::Error> {
     let directorio = "data";
 
-    let mut contenido = tokio::fs::read_dir(directorio).await?;
-    let mut archivos: Vec<PathBuf> = Vec::new();
+    let mut data_content = tokio::fs::read_dir(directorio).await?;
+    let mut data_files: Vec<PathBuf> = Vec::new();
 
-    while let Some(entrada) = contenido.next_entry().await? {
-        let ruta = entrada.path();
-        let nombre = entrada.file_name();
+    while let Some(data_input) = data_content.next_entry().await? {
+        let ruta = data_input.path();
+        let name = data_input.file_name();
         if ruta.is_file() {
-            archivos.push(nombre.into());
+            data_files.push(name.into());
         }
     }
 
-    let archivos: Vec<String> = archivos
+    let data_files: Vec<String> = data_files
         .into_iter()
         .filter_map(|path| path.file_stem().map(|stem| format!(r#"<li><a href="/api/{}">{}</a></li>"#, stem.to_string_lossy().to_string(), stem.to_string_lossy().to_string())))
         .collect();
@@ -37,7 +37,7 @@ async fn index(res: &mut Response) -> Result<(), anyhow::Error> {
                 <ul>{}</ul>
             </body>
         </html>
-        "#, archivos.join(""));
+        "#, data_files.join(""));
 
     res.render(Text::Html(html));
     Ok(())
