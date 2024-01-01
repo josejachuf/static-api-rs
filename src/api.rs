@@ -29,6 +29,30 @@ async fn create_empty_json_file(f: &str) -> Result<(), io::Error> {
     Ok(())
 }
 
+async fn update_json_file(f: &str, id: u64, updated_item: &serde_json::Value) -> Result<(), anyhow::Error> {
+    let file_path = format!("data/{}.json", f);
+    let json_string = match read_json_from_file(&f).await {
+        Ok(s) => s,
+        Err(_) => return Ok(()),
+    };
+
+    let mut json_value = convert_string_to_json(&json_string)?;
+
+    if let Some(index) = json_value
+        .as_array()
+        .unwrap()
+        .iter()
+        .position(|item| item["id"].as_u64() == Some(id))
+    {
+        json_value.as_array_mut().unwrap()[index] = updated_item.clone();
+
+        let json_string = serde_json::to_string_pretty(&json_value)?;
+        tokio::fs::write(file_path, json_string).await?;
+    }
+
+    Ok(())
+}
+
 async fn delete_from_json_file(f: &str, id: u64) -> Result<(), anyhow::Error> {
     let file_path = format!("data/{}.json", f);
     let json_string = match read_json_from_file(&f).await {
@@ -139,6 +163,21 @@ pub async fn add_one(req: &mut Request) -> Result<Json<serde_json::Value>, anyho
     let json_string = serde_json::to_string_pretty(&json_value)?;
     let file_path = format!("data/{}.json", file_path);
     tokio::fs::write(file_path, json_string).await?;
+
+    Ok(Json(json_value))
+}
+
+#[handler]
+pub async fn update_one(req: &mut Request) -> Result<Json<serde_json::Value>, anyhow::Error> {
+    let file_path = req.param::<String>("f").unwrap();
+    let id = req.param::<u64>("id").unwrap();
+
+    let updated_item_json = req.parse_body::<serde_json::Value>().await?;
+
+    update_json_file(&file_path, id, &updated_item_json).await?;
+
+    let json_string = read_json_from_file(&file_path).await?;
+    let json_value = convert_string_to_json(&json_string)?;
 
     Ok(Json(json_value))
 }

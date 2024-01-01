@@ -56,7 +56,7 @@ async fn main() {
               )
         .push(Router::with_path("api/<f>/<id>")
               .get(api::get_one)
-              // .put(put_one)
+              .put(api::update_one)
               .delete(api::delete_one)
               )
 
