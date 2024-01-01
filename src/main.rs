@@ -6,7 +6,7 @@ use std::path::PathBuf;
 
 #[handler]
 async fn index(res: &mut Response) -> Result<(), anyhow::Error> {
-    let directorio = "json";
+    let directorio = "data";
 
     let mut contenido = tokio::fs::read_dir(directorio).await?;
     let mut archivos: Vec<PathBuf> = Vec::new();
@@ -43,7 +43,7 @@ async fn index(res: &mut Response) -> Result<(), anyhow::Error> {
 
 
 async fn read_json_from_file(f: String) -> Result<String, io::Error> {
-    let mut json_file = tokio::fs::File::open(format!("json/{f}.json")).await?;
+    let mut json_file = tokio::fs::File::open(format!("data/{f}.json")).await?;
     let mut json_string = String::new();
     json_file.read_to_string(&mut json_string).await?;
     Ok(json_string)
