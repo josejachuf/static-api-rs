@@ -1,8 +1,14 @@
 use dotenv;
 use salvo::prelude::*;
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 
 mod api;
+
+async fn init(data_dir: &str) {
+    if !Path::new(data_dir).exists() {
+        std::fs::create_dir(&data_dir).unwrap();
+    }
+}
 
 #[handler]
 async fn index(res: &mut Response) -> Result<(), anyhow::Error> {
@@ -45,6 +51,7 @@ async fn index(res: &mut Response) -> Result<(), anyhow::Error> {
 async fn main() {
     // tracing_subscriber::fmt().init();
     dotenv::dotenv().ok();
+    init("data").await;
 
     let host = std::env::var("IPHOST").unwrap_or("127.0.0.1".to_string());
     let port = std::env::var("PORT").unwrap_or("5800".to_string());
