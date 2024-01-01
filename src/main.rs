@@ -63,6 +63,35 @@ async fn create_empty_json_file(f: &str) -> Result<(), io::Error> {
     Ok(())
 }
 
+async fn delete_from_json_file(f: &str, id: u64) -> Result<(), anyhow::Error> {
+    let file_path = format!("data/{}.json", f);
+    let json_string = match read_json_from_file(&f).await {
+        Ok(s) => s,
+        Err(_) => return Ok(()),
+    };
+
+    let json_value = convert_string_to_json(&json_string)?;
+
+    let filtered_items: Vec<serde_json::Value> = json_value
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|item| {
+            if let Some(item_id) = item["id"].as_u64() {
+                item_id != id
+            } else {
+                true
+            }
+        })
+        .cloned()
+        .collect();
+
+    let json_string = serde_json::to_string_pretty(&filtered_items)?;
+    tokio::fs::write(file_path, json_string).await?;
+
+    Ok(())
+}
+
 fn convert_string_to_json(json_string: &str) -> Result<serde_json::Value, anyhow::Error> {
     let json_value: serde_json::Value = serde_json::from_str(json_string)?;
     Ok(json_value)
@@ -144,6 +173,19 @@ async fn add_one(req: &mut Request) -> Result<Json<serde_json::Value>, anyhow::E
     Ok(Json(json_value))
 }
 
+#[handler]
+async fn delete_one(req: &mut Request) -> Result<Json<serde_json::Value>, anyhow::Error> {
+    let file_path = req.param::<String>("f").unwrap();
+    let id = req.param::<u64>("id").unwrap();
+
+    delete_from_json_file(&file_path, id).await?;
+
+    let json_string = read_json_from_file(&file_path).await?;
+    let json_value = convert_string_to_json(&json_string)?;
+
+    Ok(Json(json_value))
+}
+
 
 #[tokio::main]
 async fn main() {
@@ -161,7 +203,7 @@ async fn main() {
         .push(Router::with_path("api/<f>/<id>")
               .get(get_one)
               // .put(put_one)
-              // .delete(delete_one)
+              .delete(delete_one)
               )
 
         ;
