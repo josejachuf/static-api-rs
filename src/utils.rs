@@ -1,7 +1,7 @@
 use rand::Rng;
 use std::io;
 use tokio::fs::OpenOptions;
-use tokio::io::{AsyncWriteExt, AsyncReadExt};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 pub fn generate_random_id() -> u64 {
     let mut rng = rand::thread_rng();
@@ -28,7 +28,11 @@ pub async fn create_empty_json_file(f: &str) -> Result<(), io::Error> {
     Ok(())
 }
 
-pub async fn update_json_file(f: &str, id: u64, updated_item: &serde_json::Value) -> Result<(), anyhow::Error> {
+pub async fn update_json_file(
+    f: &str,
+    id: u64,
+    updated_item: &serde_json::Value,
+) -> Result<(), anyhow::Error> {
     let file_path = format!("data/{}.json", f);
     let json_string = match read_json_from_file(&f).await {
         Ok(s) => s,

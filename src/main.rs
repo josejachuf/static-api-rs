@@ -1,6 +1,6 @@
 use dotenv;
 use salvo::prelude::*;
-use std::path::{PathBuf, Path};
+use std::path::{Path, PathBuf};
 
 mod handlers;
 mod utils;
@@ -28,10 +28,19 @@ async fn index(res: &mut Response) -> Result<(), anyhow::Error> {
 
     let data_files: Vec<String> = data_files
         .into_iter()
-        .filter_map(|path| path.file_stem().map(|stem| format!(r#"<li><a href="/api/{}">{}</a></li>"#, stem.to_string_lossy().to_string(), stem.to_string_lossy().to_string())))
+        .filter_map(|path| {
+            path.file_stem().map(|stem| {
+                format!(
+                    r#"<li><a href="/api/{}">{}</a></li>"#,
+                    stem.to_string_lossy().to_string(),
+                    stem.to_string_lossy().to_string()
+                )
+            })
+        })
         .collect();
 
-    let html = format!(r#"
+    let html = format!(
+        r#"
         <!DOCTYPE html>
         <html>
             <head>
@@ -63,7 +72,9 @@ async fn index(res: &mut Response) -> Result<(), anyhow::Error> {
 
             </body>
         </html>
-        "#, data_files.join(""));
+        "#,
+        data_files.join("")
+    );
 
     res.render(Text::Html(html));
     Ok(())
@@ -78,18 +89,19 @@ async fn main() {
     let host = std::env::var("IPHOST").unwrap_or("127.0.0.1".to_string());
     let port = std::env::var("PORT").unwrap_or("5800".to_string());
 
-    let router = Router::new().get(index)
-        .push(Router::with_path("api/<f>")
-              .get(handlers::get_all)
-              .post(handlers::add_one)
-              )
-        .push(Router::with_path("api/<f>/<id>")
-              .get(handlers::get_one)
-              .put(handlers::update_one)
-              .delete(handlers::delete_one)
-              )
-
-        ;
+    let router = Router::new()
+        .get(index)
+        .push(
+            Router::with_path("api/<f>")
+                .get(handlers::get_all)
+                .post(handlers::add_one),
+        )
+        .push(
+            Router::with_path("api/<f>/<id>")
+                .get(handlers::get_one)
+                .put(handlers::update_one)
+                .delete(handlers::delete_one),
+        );
     let acceptor = TcpListener::new(format!("{host}:{port}")).bind().await;
     Server::new(acceptor).serve(router).await;
 }
