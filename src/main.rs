@@ -38,7 +38,28 @@ async fn index(res: &mut Response) -> Result<(), anyhow::Error> {
             </head>
             <body>
                 <h1>Static API</h1>
+
+                <p>This is a simple application simulating a basic REST API. It allows CRUD operations (Create, Read, Update, Delete) on different collections, where each collection is represented as a JSON file in the file system. If the collection does not exist, it is automatically created.</p>
+
+                <h3>Collections</h3>
+
                 <ul>{}</ul>
+
+                <h3>Try something like</h3>
+
+                <div style="background-color: #DEDEDE; padding: 10px;">
+
+                    <pre>curl -X GET http://localhost:5800/api/&lt;collection&gt;</pre>
+
+                    <pre>curl -X GET http://localhost:5800/api/&lt;collection&gt;/&lt;id&gt;</pre>
+
+                    <pre>curl -X POST -H "Content-Type: application/json" -d '{{"field1":"value1", "field2":"value2"}}' http://localhost:5800/api/&lt;collection&gt;</pre>
+
+                    <pre>curl -X PUT -H "Content-Type: application/json" -d '{{"field1":"new_value1", "new_field2":"value2"}}' http://localhost:5800/api/&lt;collection&gt;/&lt;id&gt;</pre>
+
+                    <pre>curl -X DELETE http://localhost:5800/api/&lt;collection&gt;/&lt;id&gt;</pre>
+                </div>
+
             </body>
         </html>
         "#, data_files.join(""));
