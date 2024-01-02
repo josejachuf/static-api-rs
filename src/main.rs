@@ -2,7 +2,8 @@ use dotenv;
 use salvo::prelude::*;
 use std::path::{PathBuf, Path};
 
-mod api;
+mod handlers;
+mod utils;
 
 async fn init(data_dir: &str) {
     if !Path::new(data_dir).exists() {
@@ -79,13 +80,13 @@ async fn main() {
 
     let router = Router::new().get(index)
         .push(Router::with_path("api/<f>")
-              .get(api::get_all)
-              .post(api::add_one)
+              .get(handlers::get_all)
+              .post(handlers::add_one)
               )
         .push(Router::with_path("api/<f>/<id>")
-              .get(api::get_one)
-              .put(api::update_one)
-              .delete(api::delete_one)
+              .get(handlers::get_one)
+              .put(handlers::update_one)
+              .delete(handlers::delete_one)
               )
 
         ;
