@@ -49,7 +49,7 @@ async fn index(res: &mut Response) -> Result<(), anyhow::Error> {
 
 #[tokio::main]
 async fn main() {
-    // tracing_subscriber::fmt().init();
+    tracing_subscriber::fmt().init();
     dotenv::dotenv().ok();
     init("data").await;
 
