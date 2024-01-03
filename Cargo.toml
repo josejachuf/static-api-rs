@@ -6,10 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dotenv = "0.15"
 anyhow = "1"
 rand = "0.8.5"
-# salvo = { version = "0.44.1", features = ["anyhow"] }
+clap = "4.4"
+# dirs = "5.0.1"
 salvo = { version = "0.63", features = ["anyhow"] }
 tokio = { version = "1", features = ["macros"] }
 tracing = "0.1"

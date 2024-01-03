@@ -1,8 +1,10 @@
-use dotenv;
+use clap::{Arg, Command};
 use salvo::prelude::*;
-use std::path::{PathBuf, Path};
+use std::path::{Path, PathBuf};
+// use dirs;
 
-mod api;
+mod handlers;
+mod utils;
 
 async fn init(data_dir: &str) {
     if !Path::new(data_dir).exists() {
@@ -12,9 +14,9 @@ async fn init(data_dir: &str) {
 
 #[handler]
 async fn index(res: &mut Response) -> Result<(), anyhow::Error> {
-    let directorio = "data";
+    let data_dir = "data";
 
-    let mut data_content = tokio::fs::read_dir(directorio).await?;
+    let mut data_content = tokio::fs::read_dir(data_dir).await?;
     let mut data_files: Vec<PathBuf> = Vec::new();
 
     while let Some(data_input) = data_content.next_entry().await? {
@@ -27,10 +29,19 @@ async fn index(res: &mut Response) -> Result<(), anyhow::Error> {
 
     let data_files: Vec<String> = data_files
         .into_iter()
-        .filter_map(|path| path.file_stem().map(|stem| format!(r#"<li><a href="/api/{}">{}</a></li>"#, stem.to_string_lossy().to_string(), stem.to_string_lossy().to_string())))
+        .filter_map(|path| {
+            path.file_stem().map(|stem| {
+                format!(
+                    r#"<li><a href="/api/{}">{}</a></li>"#,
+                    stem.to_string_lossy().to_string(),
+                    stem.to_string_lossy().to_string()
+                )
+            })
+        })
         .collect();
 
-    let html = format!(r#"
+    let html = format!(
+        r#"
         <!DOCTYPE html>
         <html>
             <head>
@@ -62,7 +73,9 @@ async fn index(res: &mut Response) -> Result<(), anyhow::Error> {
 
             </body>
         </html>
-        "#, data_files.join(""));
+        "#,
+        data_files.join("")
+    );
 
     res.render(Text::Html(html));
     Ok(())
@@ -71,24 +84,54 @@ async fn index(res: &mut Response) -> Result<(), anyhow::Error> {
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt().init();
-    dotenv::dotenv().ok();
+
+    let matches = Command::new("static-api server")
+        .arg(Arg::new("host")
+            .short('i')
+            .long("host")
+            .value_name("HOST")
+            .default_value("127.0.0.1")
+            .help("IP address of the server")
+            .required(false))
+        .arg(Arg::new("port")
+            .short('p')
+            .long("port")
+            .value_name("PORT")
+            .default_value("5800")
+            .help("Port that will listen to the server")
+            .required(false))
+        .get_matches();
+
+    let host = matches.get_one::<String>("host").unwrap();
+    let port = matches.get_one::<String>("port").unwrap();
+
+    // if let Some(mut home_dir) = dirs::home_dir() {
+    //     home_dir.push(".static-api");
+    //
+    //     if let Some(data_dir_str) = home_dir.to_str() {
+    //         init(data_dir_str).await;
+    //     } else {
+    //         println!("Failed to convert the path to &str.");
+    //     }
+    // } else {
+    //     println!("Unable to determine the user's directory.");
+    // }
+
     init("data").await;
 
-    let host = std::env::var("IPHOST").unwrap_or("127.0.0.1".to_string());
-    let port = std::env::var("PORT").unwrap_or("5800".to_string());
-
-    let router = Router::new().get(index)
-        .push(Router::with_path("api/<f>")
-              .get(api::get_all)
-              .post(api::add_one)
-              )
-        .push(Router::with_path("api/<f>/<id>")
-              .get(api::get_one)
-              .put(api::update_one)
-              .delete(api::delete_one)
-              )
-
-        ;
+    let router = Router::new()
+        .get(index)
+        .push(
+            Router::with_path("api/<f>")
+                .get(handlers::get_all)
+                .post(handlers::add_one),
+        )
+        .push(
+            Router::with_path("api/<f>/<id>")
+                .get(handlers::get_one)
+                .put(handlers::update_one)
+                .delete(handlers::delete_one),
+        );
     let acceptor = TcpListener::new(format!("{host}:{port}")).bind().await;
     Server::new(acceptor).serve(router).await;
 }
