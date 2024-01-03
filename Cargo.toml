@@ -9,7 +9,7 @@ edition = "2021"
 anyhow = "1"
 rand = "0.8.5"
 clap = "4.4"
-# salvo = { version = "0.44.1", features = ["anyhow"] }
+# dirs = "5.0.1"
 salvo = { version = "0.63", features = ["anyhow"] }
 tokio = { version = "1", features = ["macros"] }
 tracing = "0.1"

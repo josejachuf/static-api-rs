@@ -1,6 +1,7 @@
 use clap::{Arg, Command};
 use salvo::prelude::*;
 use std::path::{Path, PathBuf};
+// use dirs;
 
 mod handlers;
 mod utils;
@@ -13,9 +14,9 @@ async fn init(data_dir: &str) {
 
 #[handler]
 async fn index(res: &mut Response) -> Result<(), anyhow::Error> {
-    let directorio = "data";
+    let data_dir = "data";
 
-    let mut data_content = tokio::fs::read_dir(directorio).await?;
+    let mut data_content = tokio::fs::read_dir(data_dir).await?;
     let mut data_files: Vec<PathBuf> = Vec::new();
 
     while let Some(data_input) = data_content.next_entry().await? {
@@ -103,6 +104,18 @@ async fn main() {
 
     let host = matches.get_one::<String>("host").unwrap();
     let port = matches.get_one::<String>("port").unwrap();
+
+    // if let Some(mut home_dir) = dirs::home_dir() {
+    //     home_dir.push(".static-api");
+    //
+    //     if let Some(data_dir_str) = home_dir.to_str() {
+    //         init(data_dir_str).await;
+    //     } else {
+    //         println!("Failed to convert the path to &str.");
+    //     }
+    // } else {
+    //     println!("Unable to determine the user's directory.");
+    // }
 
     init("data").await;
 
