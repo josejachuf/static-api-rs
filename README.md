@@ -2,6 +2,8 @@
 
 This is a simple application simulating a basic REST API. It allows CRUD operations (Create, Read, Update, Delete) on different collections, where each collection is represented as a JSON file in the file system. If the collection does not exist, it is automatically created.
 
+This becomes particularly handy during front-end development, especially when the back-end is still in the process of being defined.
+
 By default, the app will listen on localhost:5800. If you need to change the HOST and PORT, you can either declare the environment variables IPHOST and PORT, or create a .env file with these settings.
 
 ## Endpoints
