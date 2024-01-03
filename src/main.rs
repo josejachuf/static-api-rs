@@ -1,4 +1,4 @@
-use dotenv;
+use clap::{Arg, Command};
 use salvo::prelude::*;
 use std::path::{Path, PathBuf};
 
@@ -83,11 +83,28 @@ async fn index(res: &mut Response) -> Result<(), anyhow::Error> {
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt().init();
-    dotenv::dotenv().ok();
-    init("data").await;
 
-    let host = std::env::var("IPHOST").unwrap_or("127.0.0.1".to_string());
-    let port = std::env::var("PORT").unwrap_or("5800".to_string());
+    let matches = Command::new("static-api server")
+        .arg(Arg::new("host")
+            .short('i')
+            .long("host")
+            .value_name("HOST")
+            .default_value("127.0.0.1")
+            .help("IP address of the server")
+            .required(false))
+        .arg(Arg::new("port")
+            .short('p')
+            .long("port")
+            .value_name("PORT")
+            .default_value("5800")
+            .help("Port that will listen to the server")
+            .required(false))
+        .get_matches();
+
+    let host = matches.get_one::<String>("host").unwrap();
+    let port = matches.get_one::<String>("port").unwrap();
+
+    init("data").await;
 
     let router = Router::new()
         .get(index)
