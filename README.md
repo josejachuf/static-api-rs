@@ -61,3 +61,14 @@ curl -X PUT -H "Content-Type: application/json" -d '{"name":"Updated Item", "val
 ```bash
 curl -X DELETE http://localhost:5800/api/example/1
 ```
+
+## Arguments
+
+```
+Usage: static-api [OPTIONS]
+
+Options:
+  -i, --host <HOST>     IP address of the server [default: localhost]
+  -p, --port <PORT>     Port that will listen to the server [default: 5800]
+  -h, --help            Print help
+```
