@@ -9,15 +9,15 @@ pub fn generate_random_id() -> u64 {
     rng.gen_range(1..=100000)
 }
 
-pub async fn read_json_from_file(f: &str) -> Result<String, io::Error> {
-    let mut json_file = tokio::fs::File::open(format!("data/{}.json", f)).await?;
+pub async fn read_json_from_file(data_dir: &str, f: &str) -> Result<String, io::Error> {
+    let mut json_file = tokio::fs::File::open(format!("{}/{}.json", data_dir, f)).await?;
     let mut json_string = String::new();
     json_file.read_to_string(&mut json_string).await?;
     Ok(json_string)
 }
 
-pub async fn create_empty_json_file(f: &str) -> Result<(), io::Error> {
-    let file_path = format!("data/{}.json", f);
+pub async fn create_empty_json_file(data_dir: &str, f: &str) -> Result<(), io::Error> {
+    let file_path = format!("{}/{}.json", data_dir, f);
     let mut file = OpenOptions::new()
         .create(true)
         .write(true)
@@ -29,12 +29,13 @@ pub async fn create_empty_json_file(f: &str) -> Result<(), io::Error> {
 }
 
 pub async fn update_json_file(
+    data_dir: &str,
     f: &str,
     id: u64,
     updated_item: &serde_json::Value,
 ) -> Result<(), anyhow::Error> {
-    let file_path = format!("data/{}.json", f);
-    let json_string = match read_json_from_file(&f).await {
+    let file_path = format!("{}/{}.json", data_dir, f);
+    let json_string = match read_json_from_file(&data_dir, &f).await {
         Ok(s) => s,
         Err(_) => return Ok(()),
     };
@@ -56,9 +57,9 @@ pub async fn update_json_file(
     Ok(())
 }
 
-pub async fn delete_from_json_file(f: &str, id: u64) -> Result<(), anyhow::Error> {
+pub async fn delete_from_json_file(data_dir: &str, f: &str, id: u64) -> Result<(), anyhow::Error> {
     let file_path = format!("data/{}.json", f);
-    let json_string = match read_json_from_file(&f).await {
+    let json_string = match read_json_from_file(&data_dir, &f).await {
         Ok(s) => s,
         Err(_) => return Ok(()),
     };

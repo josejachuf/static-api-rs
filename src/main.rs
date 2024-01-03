@@ -1,11 +1,17 @@
 use clap::{Arg, Command};
+use salvo::affix;
 use salvo::prelude::*;
 use std::path::Path;
-// use dirs;
+use dirs;
 
 mod html;
 mod handlers;
 mod utils;
+
+#[derive(Default, Clone, Debug)]
+pub struct AppConfig {
+    pub data_dir: String,
+}
 
 async fn init(data_dir: &str) {
     if !Path::new(data_dir).exists() {
@@ -37,21 +43,29 @@ async fn main() {
     let host = matches.get_one::<String>("host").unwrap();
     let port = matches.get_one::<String>("port").unwrap();
 
-    // if let Some(mut home_dir) = dirs::home_dir() {
-    //     home_dir.push(".static-api");
-    //
-    //     if let Some(data_dir_str) = home_dir.to_str() {
-    //         init(data_dir_str).await;
-    //     } else {
-    //         println!("Failed to convert the path to &str.");
-    //     }
-    // } else {
-    //     println!("Unable to determine the user's directory.");
-    // }
+    let mut data_dir = String::new();
 
-    init("data").await;
+    if let Some(mut home_dir) = dirs::home_dir() {
+        home_dir.push(".static-api");
+
+        if let Some(data_dir_str) = home_dir.to_str() {
+            data_dir = data_dir_str.to_string();
+        } else {
+            data_dir = "data".to_string();
+            println!("Failed to convert the path to &str.");
+        }
+    } else {
+        println!("Unable to determine the user's directory.");
+    }
+
+    init(&data_dir).await;
+
+    let app_config = AppConfig {
+        data_dir: data_dir.clone(),
+    };
 
     let router = Router::new()
+        .hoop(affix::inject(app_config.clone()))
         .get(html::index)
         .push(
             Router::with_path("api/<f>")

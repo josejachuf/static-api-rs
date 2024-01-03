@@ -1,9 +1,11 @@
 use salvo::prelude::*;
 use std::path::PathBuf;
+use crate::AppConfig;
 
 #[handler]
-pub async fn index(res: &mut Response) -> Result<(), anyhow::Error> {
-    let data_dir = "data";
+pub async fn index(res: &mut Response, depot: &mut Depot) -> Result<(), anyhow::Error> {
+    let app_config = depot.obtain::<AppConfig>().unwrap().clone();
+    let data_dir = &app_config.data_dir;
 
     let mut data_content = tokio::fs::read_dir(data_dir).await?;
     let mut data_files: Vec<PathBuf> = Vec::new();
