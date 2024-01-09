@@ -58,7 +58,7 @@ pub async fn update_json_file(
 }
 
 pub async fn delete_from_json_file(data_dir: &str, f: &str, id: u64) -> Result<(), anyhow::Error> {
-    let file_path = format!("data/{}.json", f);
+    let file_path = format!("{}/{}.json", data_dir, f);
     let json_string = match read_json_from_file(&data_dir, &f).await {
         Ok(s) => s,
         Err(_) => return Ok(()),
