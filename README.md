@@ -6,6 +6,8 @@ This becomes particularly handy during front-end development, especially when th
 
 By default, the app will listen on localhost:5800. If you need to change the HOST and PORT, you can pass the values as arguments. See below the use of arguments.
 
+Enter http://localhost:5800 to see the available collections
+
 ## Endpoints
 
 ### Get all items in a collection (GET ALL or POST)
@@ -75,7 +77,7 @@ Options:
   -h, --help            Print help
 ```
 
-Example: 
+Example:
 
 ./static-api --port 5555 --host 0.0.0.0
 
