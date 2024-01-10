@@ -25,7 +25,7 @@ pub async fn get_all(req: &mut Request, depot: &mut Depot) -> Result<Json<serde_
 }
 
 #[handler]
-pub async fn get_one(req: &mut Request, depot: &mut Depot) -> Result<Json<serde_json::Value>, anyhow::Error> {
+pub async fn get_one(req: &mut Request, res: &mut Response, depot: &mut Depot) -> Result<Json<serde_json::Value>, anyhow::Error> {
     let app_config = depot.obtain::<AppConfig>().unwrap().clone();
     let data_dir = &app_config.data_dir;
 
@@ -59,7 +59,8 @@ pub async fn get_one(req: &mut Request, depot: &mut Depot) -> Result<Json<serde_
         let filtered_item = &filtered_item[0];
         Ok(Json(filtered_item.clone()))
     } else {
-        Ok(Json("Not found".into()))
+        res.status_code(StatusCode::NOT_FOUND);
+        Ok(Json(serde_json::json!({})))
     }
 }
 
@@ -94,7 +95,7 @@ pub async fn add_one(req: &mut Request, depot: &mut Depot) -> Result<Json<serde_
 }
 
 #[handler]
-pub async fn update_one(req: &mut Request, depot: &mut Depot) -> Result<Json<serde_json::Value>, anyhow::Error> {
+pub async fn update_one(req: &mut Request, res: &mut Response, depot: &mut Depot) -> Result<Json<serde_json::Value>, anyhow::Error> {
     let app_config = depot.obtain::<AppConfig>().unwrap().clone();
     let data_dir = &app_config.data_dir;
     let file_path = req.param::<String>("f").unwrap();
@@ -102,28 +103,30 @@ pub async fn update_one(req: &mut Request, depot: &mut Depot) -> Result<Json<ser
 
     let updated_item_json = req.parse_body::<serde_json::Value>().await?;
 
-    update_json_file(data_dir, &file_path, id, &updated_item_json).await?;
+    let found_item = update_json_file(data_dir, &file_path, id, &updated_item_json).await?;
 
-    let json_string = read_json_from_file(data_dir, &file_path).await?;
-    let json_value = convert_string_to_json(&json_string)?;
-
-    Ok(Json(json_value))
+    if found_item {
+        Ok(Json(updated_item_json))
+    } else {
+        res.status_code(StatusCode::NOT_FOUND);
+        Ok(Json(serde_json::json!({})))
+    }
 }
 
 #[handler]
-pub async fn delete_one(req: &mut Request, res: &mut Response, depot: &mut Depot) -> Result<(), anyhow::Error> {
+pub async fn delete_one(req: &mut Request, res: &mut Response, depot: &mut Depot) -> Result<Json<serde_json::Value>, anyhow::Error> {
     let app_config = depot.obtain::<AppConfig>().unwrap().clone();
     let data_dir = &app_config.data_dir;
 
     let file_path = req.param::<String>("f").unwrap();
     let id = req.param::<u64>("id").unwrap();
 
-    let item_found = delete_from_json_file(data_dir, &file_path, id).await?;
-    if item_found {
+    let found_item = delete_from_json_file(data_dir, &file_path, id).await?;
+    if found_item {
         res.status_code(StatusCode::NO_CONTENT);
     } else {
         res.status_code(StatusCode::NOT_FOUND);
     }
 
-    Ok(())
+    Ok(Json(serde_json::json!({})))
 }
