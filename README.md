@@ -4,7 +4,7 @@ This is a simple application simulating a basic REST API. It allows CRUD operati
 
 This becomes particularly handy during front-end development, especially when the back-end is still in the process of being defined.
 
-By default, the app will listen on localhost:5800. If you need to change the HOST and PORT, you can either declare the environment variables IPHOST and PORT, or create a .env file with these settings.
+By default, the app will listen on localhost:5800. If you need to change the HOST and PORT, you can pass the values as arguments. See below the use of arguments.
 
 ## Endpoints
 
@@ -74,3 +74,9 @@ Options:
   -p, --port <PORT>     Port that will listen to the server [default: 5800]
   -h, --help            Print help
 ```
+
+Example: 
+
+./static-api --port 5555 --host 0.0.0.0
+
+http://0.0.0.0:5555
