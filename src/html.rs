@@ -47,6 +47,8 @@ pub async fn index(res: &mut Response, depot: &mut Depot) -> Result<(), anyhow::
 
                 <ul>{}</ul>
 
+                <p>JSON files are stored in <strong>{data_dir}<strong></p>
+
                 <h3>Try something like</h3>
 
                 <div style="background-color: #DEDEDE; padding: 10px;">
