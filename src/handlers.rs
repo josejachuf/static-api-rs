@@ -3,6 +3,7 @@ use crate::utils::{
     read_json_from_file, update_json_file,
 };
 use salvo::prelude::*;
+use salvo::http::StatusCode;
 use crate::AppConfig;
 
 #[handler]
@@ -110,17 +111,19 @@ pub async fn update_one(req: &mut Request, depot: &mut Depot) -> Result<Json<ser
 }
 
 #[handler]
-pub async fn delete_one(req: &mut Request, depot: &mut Depot) -> Result<Json<serde_json::Value>, anyhow::Error> {
+pub async fn delete_one(req: &mut Request, res: &mut Response, depot: &mut Depot) -> Result<(), anyhow::Error> {
     let app_config = depot.obtain::<AppConfig>().unwrap().clone();
     let data_dir = &app_config.data_dir;
 
     let file_path = req.param::<String>("f").unwrap();
     let id = req.param::<u64>("id").unwrap();
 
-    delete_from_json_file(data_dir, &file_path, id).await?;
+    let item_found = delete_from_json_file(data_dir, &file_path, id).await?;
+    if item_found {
+        res.status_code(StatusCode::NO_CONTENT);
+    } else {
+        res.status_code(StatusCode::NOT_FOUND);
+    }
 
-    let json_string = read_json_from_file(data_dir, &file_path).await?;
-    let json_value = convert_string_to_json(&json_string)?;
-
-    Ok(Json(json_value))
+    Ok(())
 }

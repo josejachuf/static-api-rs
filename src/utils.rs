@@ -57,14 +57,15 @@ pub async fn update_json_file(
     Ok(())
 }
 
-pub async fn delete_from_json_file(data_dir: &str, f: &str, id: u64) -> Result<(), anyhow::Error> {
+pub async fn delete_from_json_file(data_dir: &str, f: &str, id: u64) -> Result<bool, anyhow::Error> {
     let file_path = format!("{}/{}.json", data_dir, f);
     let json_string = match read_json_from_file(&data_dir, &f).await {
         Ok(s) => s,
-        Err(_) => return Ok(()),
+        Err(_) => return Ok(false),
     };
 
     let json_value = convert_string_to_json(&json_string)?;
+    let mut found_item = false;
 
     let filtered_items: Vec<serde_json::Value> = json_value
         .as_array()
@@ -72,7 +73,12 @@ pub async fn delete_from_json_file(data_dir: &str, f: &str, id: u64) -> Result<(
         .iter()
         .filter(|item| {
             if let Some(item_id) = item["id"].as_u64() {
-                item_id != id
+                if item_id != id {
+                    true
+                } else {
+                    found_item = true;
+                    false
+                }
             } else {
                 true
             }
@@ -80,10 +86,11 @@ pub async fn delete_from_json_file(data_dir: &str, f: &str, id: u64) -> Result<(
         .cloned()
         .collect();
 
+
     let json_string = serde_json::to_string_pretty(&filtered_items)?;
     tokio::fs::write(file_path, json_string).await?;
+    Ok(found_item)
 
-    Ok(())
 }
 
 pub fn convert_string_to_json(json_string: &str) -> Result<serde_json::Value, anyhow::Error> {
