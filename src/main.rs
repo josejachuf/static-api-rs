@@ -1,13 +1,13 @@
 use clap::{Arg, Command};
-use salvo::affix;
-use salvo::prelude::*;
-use salvo::http::Method;
-use salvo::cors::{self as cors, Cors};
-use std::path::Path;
 use dirs;
+use salvo::affix;
+use salvo::cors::{self as cors, Cors};
+use salvo::http::Method;
+use salvo::prelude::*;
+use std::path::Path;
 
-mod html;
 mod handlers;
+mod html;
 mod utils;
 
 #[derive(Default, Clone, Debug)]
@@ -26,20 +26,24 @@ async fn main() {
     tracing_subscriber::fmt().init();
 
     let matches = Command::new("static-api server")
-        .arg(Arg::new("host")
-            .short('i')
-            .long("host")
-            .value_name("HOST")
-            .default_value("127.0.0.1")
-            .help("IP address of the server")
-            .required(false))
-        .arg(Arg::new("port")
-            .short('p')
-            .long("port")
-            .value_name("PORT")
-            .default_value("5800")
-            .help("Port that will listen to the server")
-            .required(false))
+        .arg(
+            Arg::new("host")
+                .short('i')
+                .long("host")
+                .value_name("HOST")
+                .default_value("127.0.0.1")
+                .help("IP address of the server")
+                .required(false),
+        )
+        .arg(
+            Arg::new("port")
+                .short('p')
+                .long("port")
+                .value_name("PORT")
+                .default_value("5800")
+                .help("Port that will listen to the server")
+                .required(false),
+        )
         .get_matches();
 
     let host = matches.get_one::<String>("host").unwrap();
@@ -68,7 +72,13 @@ async fn main() {
 
     let cors_handler = Cors::new()
         .allow_origin(cors::Any)
-        .allow_methods(vec![Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS])
+        .allow_methods(vec![
+            Method::GET,
+            Method::POST,
+            Method::PUT,
+            Method::DELETE,
+            Method::OPTIONS,
+        ])
         .allow_headers(vec![
             "Content-Type",
             "Access-Control-Allow-Methods",
@@ -100,8 +110,7 @@ async fn main() {
                 .get(handlers::get_one)
                 .put(handlers::update_one)
                 .delete(handlers::delete_one),
-        )
-        ;
+        );
     let acceptor = TcpListener::new(format!("{host}:{port}")).bind().await;
     Server::new(acceptor).serve(router).await;
 }

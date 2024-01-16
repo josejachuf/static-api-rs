@@ -1,6 +1,6 @@
+use crate::AppConfig;
 use salvo::prelude::*;
 use std::path::PathBuf;
-use crate::AppConfig;
 
 #[handler]
 pub async fn index(res: &mut Response, depot: &mut Depot) -> Result<(), anyhow::Error> {
