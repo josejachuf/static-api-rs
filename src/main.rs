@@ -1,6 +1,8 @@
 use clap::{Arg, Command};
 use salvo::affix;
 use salvo::prelude::*;
+use salvo::http::Method;
+use salvo::cors::{self as cors, Cors};
 use std::path::Path;
 use dirs;
 
@@ -64,20 +66,42 @@ async fn main() {
         data_dir: data_dir.clone(),
     };
 
+    let cors_handler = Cors::new()
+        .allow_origin(cors::Any)
+        .allow_methods(vec![Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS])
+        .allow_headers(vec![
+            "Content-Type",
+            "Access-Control-Allow-Methods",
+            "Access-Control-Allow-Headers",
+            "Access-Control-Allow-Header",
+            "Access-Control-Request-Method",
+            "Access-Control-Allow-Origin",
+            "Access-Control-Max-Age",
+            "Authorization",
+            "hx-current-url",
+            "hx-request",
+        ])
+        .into_handler();
+
     let router = Router::new()
         .hoop(affix::inject(app_config.clone()))
         .get(html::index)
         .push(
             Router::with_path("api/<f>")
+                .hoop(cors_handler.clone())
+                .options(handler::empty())
                 .get(handlers::get_all)
                 .post(handlers::add_one),
         )
         .push(
             Router::with_path("api/<f>/<id>")
+                .hoop(cors_handler.clone())
+                .options(handler::empty())
                 .get(handlers::get_one)
                 .put(handlers::update_one)
                 .delete(handlers::delete_one),
-        );
+        )
+        ;
     let acceptor = TcpListener::new(format!("{host}:{port}")).bind().await;
     Server::new(acceptor).serve(router).await;
 }
