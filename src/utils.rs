@@ -28,6 +28,35 @@ pub async fn create_empty_json_file(data_dir: &str, f: &str) -> Result<(), io::E
     Ok(())
 }
 
+
+pub async fn add_item_to_json_file(
+    data_dir: &str,
+    file_name: &str,
+    mut new_item: serde_json::Value,
+) -> Result<serde_json::Value, anyhow::Error> {
+    let json_string = match read_json_from_file(data_dir, file_name).await {
+        Ok(s) => s,
+        Err(_) => {
+            create_empty_json_file(data_dir, file_name).await?;
+            String::from("[]")
+        }
+    };
+    let mut json_value = convert_string_to_json(&json_string)?;
+
+    if new_item.get("id").is_none() {
+        new_item["id"] = serde_json::Value::from(generate_random_id());
+    }
+
+    json_value.as_array_mut().unwrap().push(new_item.clone());
+
+    let json_string = serde_json::to_string_pretty(&json_value)?;
+    let file_path = format!("{}/{}.json", data_dir, file_name);
+    tokio::fs::write(file_path, json_string).await?;
+
+    // Ok(json_value)
+    Ok(new_item)
+}
+
 pub async fn update_json_file(
     data_dir: &str,
     f: &str,

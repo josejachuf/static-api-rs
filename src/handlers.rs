@@ -1,6 +1,6 @@
 use crate::utils::{
-    convert_string_to_json, create_empty_json_file, delete_from_json_file, generate_random_id,
-    read_json_from_file, update_json_file,
+    convert_string_to_json, create_empty_json_file, delete_from_json_file,
+    read_json_from_file, add_item_to_json_file, update_json_file,
 };
 use crate::AppConfig;
 use salvo::http::StatusCode;
@@ -74,34 +74,18 @@ pub async fn get_one(
 #[handler]
 pub async fn add_one(
     req: &mut Request,
+    res: &mut Response,
     depot: &mut Depot,
 ) -> Result<Json<serde_json::Value>, anyhow::Error> {
     let app_config = depot.obtain::<AppConfig>().unwrap().clone();
     let data_dir = &app_config.data_dir;
     let file_path = req.param::<String>("f").unwrap();
 
-    let json_string = match read_json_from_file(data_dir, &file_path).await {
-        Ok(s) => s,
-        Err(_) => {
-            create_empty_json_file(data_dir, &file_path).await?;
-            String::from("[]")
-        }
-    };
-    let mut json_value = convert_string_to_json(&json_string)?;
+    let new_item_json = req.parse_body::<serde_json::Value>().await?;
 
-    let mut new_item_json = req.parse_body::<serde_json::Value>().await?;
-
-    if new_item_json.get("id").is_none() {
-        new_item_json["id"] = serde_json::Value::from(generate_random_id());
-    }
-
-    json_value.as_array_mut().unwrap().push(new_item_json);
-
-    let json_string = serde_json::to_string_pretty(&json_value)?;
-    let file_path = format!("{}/{}.json", data_dir, file_path);
-    tokio::fs::write(file_path, json_string).await?;
-
-    Ok(Json(json_value))
+    let result = add_item_to_json_file(data_dir, &file_path, new_item_json).await?;
+    res.status_code(StatusCode::CREATED);
+    Ok(Json(result))
 }
 
 #[handler]
