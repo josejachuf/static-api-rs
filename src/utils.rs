@@ -16,6 +16,41 @@ pub async fn read_json_from_file(data_dir: &str, f: &str) -> Result<String, io::
     Ok(json_string)
 }
 
+pub async fn get_item_by_id(
+    data_dir: &str,
+    file_path: &str,
+    id: u64,
+) -> Result<serde_json::Value, anyhow::Error> {
+    let json_string = match read_json_from_file(data_dir, file_path).await {
+        Ok(s) => s,
+        Err(_) => {
+            create_empty_json_file(data_dir, file_path).await?;
+            String::from("[]")
+        }
+    };
+    let json_value = convert_string_to_json(&json_string)?;
+
+    let filtered_item = json_value
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|item| {
+            if let Some(item_id) = item["id"].as_u64() {
+                item_id == id
+            } else {
+                false
+            }
+        })
+        .cloned()
+        .collect::<Vec<serde_json::Value>>();
+
+    if let Some(filtered_item) = filtered_item.first() {
+        Ok(filtered_item.clone())
+    } else {
+        anyhow::bail!("Item not found with ID: {}", id);
+    }
+}
+
 pub async fn create_empty_json_file(data_dir: &str, f: &str) -> Result<(), io::Error> {
     let file_path = format!("{}/{}.json", data_dir, f);
     let mut file = OpenOptions::new()
@@ -52,7 +87,6 @@ pub async fn add_item_to_json_file(
     let file_path = format!("{}/{}.json", data_dir, file_name);
     tokio::fs::write(file_path, json_string).await?;
 
-    // Ok(json_value)
     Ok(new_item)
 }
 

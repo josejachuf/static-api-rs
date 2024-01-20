@@ -1,6 +1,6 @@
 use crate::utils::{
     add_item_to_json_file, convert_string_to_json, create_empty_json_file, delete_from_json_file,
-    read_json_from_file, update_json_file,
+    get_item_by_id, read_json_from_file, update_json_file,
 };
 use crate::AppConfig;
 use salvo::http::StatusCode;
@@ -35,39 +35,17 @@ pub async fn get_one(
 ) -> Result<Json<serde_json::Value>, anyhow::Error> {
     let app_config = depot.obtain::<AppConfig>().unwrap().clone();
     let data_dir = &app_config.data_dir;
-
     let file_path = req.param::<String>("f").unwrap();
     let id = req.param::<u64>("id").unwrap();
 
-    let json_string = match read_json_from_file(data_dir, &file_path).await {
-        Ok(s) => s,
+    let result = get_item_by_id(data_dir, &file_path, id).await;
+
+    match result {
+        Ok(json_value) => Ok(Json(json_value)),
         Err(_) => {
-            create_empty_json_file(data_dir, &file_path).await?;
-            String::from("[]")
+            res.status_code(StatusCode::NOT_FOUND);
+            Ok(Json(serde_json::json!({})))
         }
-    };
-    let json_value = convert_string_to_json(&json_string)?;
-
-    let filtered_item = json_value
-        .as_array()
-        .unwrap()
-        .iter()
-        .filter(|item| {
-            if let Some(item_id) = item["id"].as_u64() {
-                item_id == id
-            } else {
-                false
-            }
-        })
-        .cloned()
-        .collect::<Vec<serde_json::Value>>();
-
-    if filtered_item.len() > 0 {
-        let filtered_item = &filtered_item[0];
-        Ok(Json(filtered_item.clone()))
-    } else {
-        res.status_code(StatusCode::NOT_FOUND);
-        Ok(Json(serde_json::json!({})))
     }
 }
 
