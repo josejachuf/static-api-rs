@@ -28,7 +28,6 @@ pub async fn create_empty_json_file(data_dir: &str, f: &str) -> Result<(), io::E
     Ok(())
 }
 
-
 pub async fn add_item_to_json_file(
     data_dir: &str,
     file_name: &str,
