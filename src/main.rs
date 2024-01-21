@@ -2,7 +2,6 @@ use clap::{Arg, Command};
 use dirs;
 use salvo::affix;
 use salvo::cors::{self as cors, Cors};
-use salvo::http::Method;
 use salvo::prelude::*;
 use std::path::Path;
 
@@ -72,25 +71,8 @@ async fn main() {
 
     let cors_handler = Cors::new()
         .allow_origin(cors::Any)
-        .allow_methods(vec![
-            Method::GET,
-            Method::POST,
-            Method::PUT,
-            Method::DELETE,
-            Method::OPTIONS,
-        ])
-        .allow_headers(vec![
-            "Content-Type",
-            "Access-Control-Allow-Methods",
-            "Access-Control-Allow-Headers",
-            "Access-Control-Allow-Header",
-            "Access-Control-Request-Method",
-            "Access-Control-Allow-Origin",
-            "Access-Control-Max-Age",
-            "Authorization",
-            "hx-current-url",
-            "hx-request",
-        ])
+        .allow_methods(cors::Any)
+        .allow_headers(cors::Any)
         .into_handler();
 
     let router = Router::new()
