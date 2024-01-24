@@ -94,5 +94,7 @@ async fn main() {
                 .delete(handlers::delete_one),
         );
     let acceptor = TcpListener::new(format!("{host}:{port}")).bind().await;
+    println!("Welcome to static-api!");
+    println!("To get started, please visit the http://{host}:{port} in your browser:");
     Server::new(acceptor).serve(router).await;
 }
