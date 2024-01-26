@@ -1,12 +1,12 @@
 # static-api
 
-This is a simple application simulating a basic REST API. It allows CRUD operations (Create, Read, Update, Delete) on different collections, where each collection is represented as a JSON file in the file system. If the collection does not exist, it is automatically created.
+This is a simple application emulating a basic REST API. It allows CRUD operations (Create, Read, Update, Delete) on different collections, where each collection is represented as a JSON file in the file system. If the collection does not exist, it is automatically created.
 
 This becomes particularly handy during front-end development, especially when the back-end is still in the process of being defined.
 
-By default, the app will listen on localhost:5800. If you need to change the HOST and PORT, you can pass the values as arguments. See below the use of arguments.
+By default, the app will listen on localhost:5800. If you need to change the HOST and PORT, you can pass the values as arguments. See below for the use of arguments.
 
-Enter http://localhost:5800 to see the available collections
+Enter http://localhost:5800 to see the available collections.
 
 ## Endpoints
 
