@@ -18,6 +18,15 @@ curl -X GET http://localhost:5800/api/<collection>
 curl -X POST -H "Content-Type: application/json" -d '{"field1":"value1", "field2":"value2"}' http://localhost:5800/api/<collection>
 ```
 
+**Note**: by default you will get 30 results and the total count, you can pass "skip" & "limit" query string to get more results.
+For example:
+
+```bash
+curl -X GET http://localhost:5800/api/<collection>?skip=10&limit=5
+```
+
+Will discard the initial 10 elements and only transmit the remaining 5.
+
 ### Get a specific item by ID (GET ONE)
 ```bash
 curl -X GET http://localhost:5800/api/<collection>/<id>

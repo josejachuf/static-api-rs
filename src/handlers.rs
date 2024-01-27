@@ -14,6 +14,8 @@ pub async fn get_all(
     let app_config = depot.obtain::<AppConfig>().unwrap().clone();
     let data_dir = &app_config.data_dir;
     let file_path = req.param::<String>("f").unwrap();
+    let limit = req.query::<usize>("limit").unwrap_or(30);
+    let skip = req.query::<usize>("skip").unwrap_or(0);
 
     let json_string = match read_json_from_file(&data_dir, &file_path).await {
         Ok(s) => s,
@@ -24,7 +26,14 @@ pub async fn get_all(
     };
 
     let json_value = convert_string_to_json(&json_string)?;
-    Ok(Json(json_value))
+    let limited_json_value: Vec<&serde_json::Value> = json_value.as_array()
+        .unwrap()
+        .iter()
+        .skip(skip)
+        .take(limit)
+        .collect()
+        ;
+    Ok(Json(serde_json::to_value(limited_json_value).unwrap()))
 }
 
 #[handler]
