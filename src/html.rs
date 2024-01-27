@@ -55,6 +55,8 @@ pub async fn index(res: &mut Response, depot: &mut Depot) -> Result<(), anyhow::
 
                     <pre>curl -X GET http://localhost:5800/api/&lt;collection&gt;</pre>
 
+                    <pre>curl -X GET http://localhost:5800/api/&lt;collection&gt;?skip=10&limit=5</pre>
+
                     <pre>curl -X GET http://localhost:5800/api/&lt;collection&gt;/&lt;id&gt;</pre>
 
                     <pre>curl -X POST -H "Content-Type: application/json" -d '{{"field1":"value1", "field2":"value2"}}' http://localhost:5800/api/&lt;collection&gt;</pre>
