@@ -24,10 +24,17 @@ pub async fn index(res: &mut Response, depot: &mut Depot) -> Result<(), anyhow::
         .filter_map(|path| {
             path.file_stem().map(|stem| {
                 format!(
-                    r#"<li>
-                        <a href="/api/{}">{}</a>
-                        [<a href="/delete-collection/{}">delete</a>]
-                    </li>"#,
+                    r#"
+<li class="columns is-gapless">
+  <div class="column is-6">
+    <a href="/api/{}" class="has-text-link is-size-5">{}</a>
+  </div>
+  <div class="column is-6">
+    <a href="/delete-collection/{}" class="button is-danger is-small">delete</a>
+  </div>
+</li>
+
+                    "#,
                     stem.to_string_lossy().to_string(),
                     stem.to_string_lossy().to_string(),
                     stem.to_string_lossy().to_string(),
@@ -41,35 +48,50 @@ pub async fn index(res: &mut Response, depot: &mut Depot) -> Result<(), anyhow::
         <!DOCTYPE html>
         <html>
             <head>
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
                 <title>Static API</title>
             </head>
             <body>
-                <h1>Static API</h1>
+                <section class="section">
+                    <div class="container is-max-desktop">
+                        <section class="hero is-info mb-5">
+                          <div class="hero-body">
+                            <p class="title">
+                              Static-API
+                            </p>
+                            <p class="subtitle">
+                              fake api for testing
+                            </p>
+                          </div>
+                        </section>
 
-                <p>This is a simple application emulating a basic REST API. It allows CRUD operations (Create, Read, Update, Delete) on different collections, where each collection is represented as a JSON file in the file system. If the collection does not exist, it is automatically created.</p>
+                        <p class="has-text-justified">This is a simple application emulating a basic REST API. It allows CRUD operations (Create, Read, Update, Delete) on different collections, where each collection is represented as a JSON file in the file system. If the collection does not exist, it is automatically created.</p>
 
-                <h3>Collections</h3>
+                        <h3 class="title is-4 has-text-grey-dark mt-4">Collections</h3>
 
-                <ul>{}</ul>
+                        <div class="content">
+                            <ul>{}</ul>
+                        </div>
 
-                <p>JSON files are stored in <strong>{data_dir}<strong></p>
+                        <p>JSON files are stored in <strong>{data_dir}<strong></p>
 
-                <h3>Try something like</h3>
+                        <h3 class="title is-4 has-text-grey-dark mt-4">Try something like</h3>
 
-                <div style="background-color: #DEDEDE; padding: 10px;">
+                        <div class="box">
+                          <code class="is-family-code p-2">
+                            <p class="mb-4"><strong>curl -X GET</strong> http://localhost:5800/api/<span class="has-text-primary">&lt;collection&gt;</span></p>
+                            <p class="mb-4"><strong>curl -X GET</strong> http://localhost:5800/api/<span class="has-text-primary">&lt;collection&gt;</span>?skip=10&limit=5</p>
+                            <p class="mb-4"><strong>curl -X GET</strong> http://localhost:5800/api/<span class="has-text-primary">&lt;collection&gt;</span>/<span class="has-text-primary">&lt;id&gt;</span></p>
+                            <p class="mb-4"><strong>curl -X POST</strong> -H "Content-Type: application/json" -d '{{"field1":"value1", "field2":"value2"}}' http://localhost:5800/api/<span class="has-text-primary">&lt;collection&gt;</span></p>
+                            <p class="mb-4"><strong>curl -X PUT</strong> -H "Content-Type: application/json" -d '{{"field1":"new_value1", "new_field2":"value2"}}' http://localhost:5800/api/<span class="has-text-primary">&lt;collection&gt;</span>/<span class="has-text-primary">&lt;id&gt;</span></p>
+                            <p class="mb-4"><strong>curl -X DELETE</strong> http://localhost:5800/api/<span class="has-text-primary">&lt;collection&gt;</span>/<span class="has-text-primary">&lt;id&gt;</span></p>
+                          </code>
+                        </div>
 
-                    <pre>curl -X GET http://localhost:5800/api/&lt;collection&gt;</pre>
 
-                    <pre>curl -X GET http://localhost:5800/api/&lt;collection&gt;?skip=10&limit=5</pre>
 
-                    <pre>curl -X GET http://localhost:5800/api/&lt;collection&gt;/&lt;id&gt;</pre>
-
-                    <pre>curl -X POST -H "Content-Type: application/json" -d '{{"field1":"value1", "field2":"value2"}}' http://localhost:5800/api/&lt;collection&gt;</pre>
-
-                    <pre>curl -X PUT -H "Content-Type: application/json" -d '{{"field1":"new_value1", "new_field2":"value2"}}' http://localhost:5800/api/&lt;collection&gt;/&lt;id&gt;</pre>
-
-                    <pre>curl -X DELETE http://localhost:5800/api/&lt;collection&gt;/&lt;id&gt;</pre>
-                </div>
+                    </div>
+                </section>
 
             </body>
         </html>
