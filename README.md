@@ -10,15 +10,14 @@ Enter http://localhost:5800 to see the available collections.
 
 ## Endpoints
 
-### Get all items in a collection (GET ALL or POST)
+### Get all items in a collection (GET ALL)
 
 ```bash
 curl -X GET http://localhost:5800/api/<collection>
 
-curl -X POST -H "Content-Type: application/json" -d '{"field1":"value1", "field2":"value2"}' http://localhost:5800/api/<collection>
 ```
 
-**Note**: by default you will get 30 results and the total count, you can pass "skip" & "limit" query string to get more results.
+**Note**: by default you will get 30 results, you can pass "skip" & "limit" query string to get more results.
 For example:
 
 ```bash
@@ -30,6 +29,12 @@ Will discard the initial 10 elements and only transmit the remaining 5.
 ### Get a specific item by ID (GET ONE)
 ```bash
 curl -X GET http://localhost:5800/api/<collection>/<id>
+```
+
+### Add item in a collection (POST)
+
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{"field1":"value1", "field2":"value2"}' http://localhost:5800/api/<collection>
 ```
 
 ### Update a specific item by ID (PUT)
