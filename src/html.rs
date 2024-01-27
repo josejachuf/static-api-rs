@@ -41,7 +41,7 @@ pub async fn index(res: &mut Response, depot: &mut Depot) -> Result<(), anyhow::
             <body>
                 <h1>Static API</h1>
 
-                <p>This is a simple application simulating a basic REST API. It allows CRUD operations (Create, Read, Update, Delete) on different collections, where each collection is represented as a JSON file in the file system. If the collection does not exist, it is automatically created.</p>
+                <p>This is a simple application emulating a basic REST API. It allows CRUD operations (Create, Read, Update, Delete) on different collections, where each collection is represented as a JSON file in the file system. If the collection does not exist, it is automatically created.</p>
 
                 <h3>Collections</h3>
 
