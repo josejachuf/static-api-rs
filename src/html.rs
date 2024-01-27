@@ -79,12 +79,12 @@ pub async fn index(res: &mut Response, depot: &mut Depot) -> Result<(), anyhow::
 
                         <div class="box">
                           <code class="is-family-code p-2">
-                            <p class="mb-4"><strong>curl -X GET</strong> http://localhost:5800/api/<span class="has-text-primary">&lt;collection&gt;</span></p>
-                            <p class="mb-4"><strong>curl -X GET</strong> http://localhost:5800/api/<span class="has-text-primary">&lt;collection&gt;</span>?skip=10&limit=5</p>
-                            <p class="mb-4"><strong>curl -X GET</strong> http://localhost:5800/api/<span class="has-text-primary">&lt;collection&gt;</span>/<span class="has-text-primary">&lt;id&gt;</span></p>
-                            <p class="mb-4"><strong>curl -X POST</strong> -H "Content-Type: application/json" -d '{{"field1":"value1", "field2":"value2"}}' http://localhost:5800/api/<span class="has-text-primary">&lt;collection&gt;</span></p>
-                            <p class="mb-4"><strong>curl -X PUT</strong> -H "Content-Type: application/json" -d '{{"field1":"new_value1", "new_field2":"value2"}}' http://localhost:5800/api/<span class="has-text-primary">&lt;collection&gt;</span>/<span class="has-text-primary">&lt;id&gt;</span></p>
-                            <p class="mb-4"><strong>curl -X DELETE</strong> http://localhost:5800/api/<span class="has-text-primary">&lt;collection&gt;</span>/<span class="has-text-primary">&lt;id&gt;</span></p>
+                            <p class="mb-4"><strong>curl -X GET</strong> http://localhost:5800/api/<span class="has-text-link">&lt;collection&gt;</span></p>
+                            <p class="mb-4"><strong>curl -X GET</strong> http://localhost:5800/api/<span class="has-text-link">&lt;collection&gt;</span>?skip=10&limit=5</p>
+                            <p class="mb-4"><strong>curl -X GET</strong> http://localhost:5800/api/<span class="has-text-link">&lt;collection&gt;</span>/<span class="has-text-link">&lt;id&gt;</span></p>
+                            <p class="mb-4"><strong>curl -X POST</strong> -H "Content-Type: application/json" -d '{{"field1":"value1", "field2":"value2"}}' http://localhost:5800/api/<span class="has-text-link">&lt;collection&gt;</span></p>
+                            <p class="mb-4"><strong>curl -X PUT</strong> -H "Content-Type: application/json" -d '{{"field1":"new_value1", "new_field2":"value2"}}' http://localhost:5800/api/<span class="has-text-link">&lt;collection&gt;</span>/<span class="has-text-link">&lt;id&gt;</span></p>
+                            <p class="mb-4"><strong>curl -X DELETE</strong> http://localhost:5800/api/<span class="has-text-link">&lt;collection&gt;</span>/<span class="has-text-link">&lt;id&gt;</span></p>
                           </code>
                         </div>
 
