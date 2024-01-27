@@ -79,6 +79,10 @@ async fn main() {
         .hoop(affix::inject(app_config.clone()))
         .get(html::index)
         .push(
+            Router::with_path("delete-collection/<f>")
+                .get(html::delete_collection)
+        )
+        .push(
             Router::with_path("api/<f>")
                 .hoop(cors_handler.clone())
                 .options(handler::empty())

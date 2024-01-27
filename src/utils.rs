@@ -162,3 +162,13 @@ pub fn convert_string_to_json(json_string: &str) -> Result<serde_json::Value, an
     let json_value: serde_json::Value = serde_json::from_str(json_string)?;
     Ok(json_value)
 }
+
+pub async fn delete_collection_sync(
+    data_dir: &str,
+    f: &str,
+) -> Result<(), std::io::Error> {
+    let file_path = format!("{}/{}.json", data_dir, f);
+    tokio::fs::remove_file(file_path).await?;
+
+    Ok(())
+}

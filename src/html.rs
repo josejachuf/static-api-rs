@@ -1,6 +1,7 @@
 use crate::AppConfig;
 use salvo::prelude::*;
 use std::path::PathBuf;
+use crate::utils::delete_collection_sync;
 
 #[handler]
 pub async fn index(res: &mut Response, depot: &mut Depot) -> Result<(), anyhow::Error> {
@@ -23,9 +24,13 @@ pub async fn index(res: &mut Response, depot: &mut Depot) -> Result<(), anyhow::
         .filter_map(|path| {
             path.file_stem().map(|stem| {
                 format!(
-                    r#"<li><a href="/api/{}">{}</a></li>"#,
+                    r#"<li>
+                        <a href="/api/{}">{}</a>
+                        [<a href="/delete-collection/{}">delete</a>]
+                    </li>"#,
                     stem.to_string_lossy().to_string(),
-                    stem.to_string_lossy().to_string()
+                    stem.to_string_lossy().to_string(),
+                    stem.to_string_lossy().to_string(),
                 )
             })
         })
@@ -74,4 +79,19 @@ pub async fn index(res: &mut Response, depot: &mut Depot) -> Result<(), anyhow::
 
     res.render(Text::Html(html));
     Ok(())
+}
+
+#[handler]
+pub async fn delete_collection(
+    req: &mut Request,
+    res: &mut Response,
+    depot: &mut Depot,
+) {
+    let app_config = depot.obtain::<AppConfig>().unwrap().clone();
+    let data_dir = &app_config.data_dir;
+    let file_path = req.param::<String>("f").unwrap();
+
+    delete_collection_sync(data_dir, &file_path).await.unwrap();
+
+    res.render(Redirect::other("/"));
 }
