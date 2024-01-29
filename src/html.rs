@@ -60,7 +60,7 @@ pub async fn index(res: &mut Response, depot: &mut Depot) -> Result<(), anyhow::
                               Static-API
                             </p>
                             <p class="subtitle">
-                              fake api for testing
+                              A fake api for testing
                             </p>
                           </div>
                         </section>
