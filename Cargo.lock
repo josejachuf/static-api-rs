@@ -1290,6 +1290,7 @@ dependencies = [
  "dirs",
  "rand",
  "salvo",
+ "serde",
  "serde_json",
  "tokio",
  "tracing",

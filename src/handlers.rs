@@ -6,11 +6,22 @@ use crate::AppConfig;
 use salvo::http::StatusCode;
 use salvo::prelude::*;
 
+use serde::Serialize;
+
+#[derive(Serialize)]
+struct ApiResponse {
+    data: Vec<serde_json::Value>,
+    total: usize,
+    limit: usize,
+    skip: usize,
+
+}
+
 #[handler]
 pub async fn get_all(
     req: &mut Request,
     depot: &mut Depot,
-) -> Result<Json<serde_json::Value>, anyhow::Error> {
+) -> Result<Json<ApiResponse>, anyhow::Error> {
     let app_config = depot.obtain::<AppConfig>().unwrap().clone();
     let data_dir = &app_config.data_dir;
     let file_path = req.param::<String>("f").unwrap();
@@ -26,14 +37,23 @@ pub async fn get_all(
     };
 
     let json_value = convert_string_to_json(&json_string)?;
+    let total_records = json_value.as_array().unwrap().len();
+
     let limited_json_value: Vec<&serde_json::Value> = json_value.as_array()
         .unwrap()
         .iter()
         .skip(skip)
         .take(limit)
-        .collect()
-        ;
-    Ok(Json(serde_json::to_value(limited_json_value).unwrap()))
+        .collect();
+
+    let api_response = ApiResponse {
+        data: limited_json_value.into_iter().cloned().collect(),
+        total: total_records,
+        limit,
+        skip,
+    };
+
+    Ok(Json(api_response))
 }
 
 #[handler]

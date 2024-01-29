@@ -15,6 +15,7 @@ tokio = { version = "1", features = ["macros"] }
 tracing = "0.1"
 tracing-subscriber = "0.3"
 serde_json = "1.0"
+serde = "1"
 
 [profile.release]
 opt-level = 'z' # Optimize for size
