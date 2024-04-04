@@ -28,10 +28,10 @@ pub async fn get_all(
     let limit = req.query::<usize>("limit").unwrap_or(30);
     let skip = req.query::<usize>("skip").unwrap_or(0);
 
-    let json_string = match read_json_from_file(&data_dir, &file_path).await {
+    let json_string = match read_json_from_file(data_dir, &file_path).await {
         Ok(s) => s,
         Err(_) => {
-            create_empty_json_file(&data_dir, &file_path).await?;
+            create_empty_json_file(data_dir, &file_path).await?;
             String::from("[]")
         }
     };

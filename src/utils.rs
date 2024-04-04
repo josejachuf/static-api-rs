@@ -97,7 +97,7 @@ pub async fn update_json_file(
     updated_item: &serde_json::Value,
 ) -> Result<bool, anyhow::Error> {
     let file_path = format!("{}/{}.json", data_dir, f);
-    let json_string = match read_json_from_file(&data_dir, &f).await {
+    let json_string = match read_json_from_file(data_dir, f).await {
         Ok(s) => s,
         Err(_) => return Ok(false),
     };
@@ -126,7 +126,7 @@ pub async fn delete_from_json_file(
     id: u64,
 ) -> Result<bool, anyhow::Error> {
     let file_path = format!("{}/{}.json", data_dir, f);
-    let json_string = match read_json_from_file(&data_dir, &f).await {
+    let json_string = match read_json_from_file(data_dir, f).await {
         Ok(s) => s,
         Err(_) => return Ok(false),
     };

@@ -1,5 +1,5 @@
 use clap::{Arg, Command};
-use dirs;
+
 use salvo::affix;
 use salvo::cors::{self as cors, Cors};
 use salvo::prelude::*;
@@ -16,7 +16,7 @@ pub struct AppConfig {
 
 async fn init(data_dir: &str) {
     if !Path::new(data_dir).exists() {
-        std::fs::create_dir(&data_dir).unwrap();
+        std::fs::create_dir(data_dir).unwrap();
     }
 }
 

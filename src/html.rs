@@ -35,9 +35,9 @@ pub async fn index(res: &mut Response, depot: &mut Depot) -> Result<(), anyhow::
 </li>
 
                     "#,
-                    stem.to_string_lossy().to_string(),
-                    stem.to_string_lossy().to_string(),
-                    stem.to_string_lossy().to_string(),
+                    stem.to_string_lossy(),
+                    stem.to_string_lossy(),
+                    stem.to_string_lossy(),
                 )
             })
         })
