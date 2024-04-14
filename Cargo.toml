@@ -7,10 +7,11 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1"
+thiserror = "1"
 rand = "0.8.5"
 clap = "4.4"
 dirs = "5.0.1"
-salvo = { version = "0.66", features = ["anyhow", "affix", "cors"] }
+salvo = { version = "0.67", features = ["anyhow", "affix", "cors"] }
 tokio = { version = "1", features = ["macros"] }
 tracing = "0.1"
 tracing-subscriber = "0.3"
