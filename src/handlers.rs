@@ -3,6 +3,7 @@ use crate::utils::{
     get_item_by_id, read_json_from_file, update_json_file,
 };
 use crate::AppConfig;
+use crate::errors::AppResult;
 use salvo::http::StatusCode;
 use salvo::prelude::*;
 
@@ -18,10 +19,7 @@ struct ApiResponse {
 }
 
 #[handler]
-pub async fn get_all(
-    req: &mut Request,
-    depot: &mut Depot,
-) -> Result<Json<ApiResponse>, anyhow::Error> {
+pub async fn get_all(req: &mut Request, depot: &mut Depot) -> AppResult<Json<ApiResponse>> {
     let app_config = depot.obtain::<AppConfig>().unwrap().clone();
     let data_dir = &app_config.data_dir;
     let file_path = req.param::<String>("f").unwrap();
@@ -57,11 +55,7 @@ pub async fn get_all(
 }
 
 #[handler]
-pub async fn get_one(
-    req: &mut Request,
-    res: &mut Response,
-    depot: &mut Depot,
-) -> Result<Json<serde_json::Value>, anyhow::Error> {
+pub async fn get_one(req: &mut Request, res: &mut Response, depot: &mut Depot) -> AppResult<Json<serde_json::Value>> {
     let app_config = depot.obtain::<AppConfig>().unwrap().clone();
     let data_dir = &app_config.data_dir;
     let file_path = req.param::<String>("f").unwrap();
@@ -79,11 +73,7 @@ pub async fn get_one(
 }
 
 #[handler]
-pub async fn add_one(
-    req: &mut Request,
-    res: &mut Response,
-    depot: &mut Depot,
-) -> Result<Json<serde_json::Value>, anyhow::Error> {
+pub async fn add_one(req: &mut Request, res: &mut Response, depot: &mut Depot) -> AppResult<Json<serde_json::Value>> {
     let app_config = depot.obtain::<AppConfig>().unwrap().clone();
     let data_dir = &app_config.data_dir;
     let file_path = req.param::<String>("f").unwrap();
@@ -96,11 +86,7 @@ pub async fn add_one(
 }
 
 #[handler]
-pub async fn update_one(
-    req: &mut Request,
-    res: &mut Response,
-    depot: &mut Depot,
-) -> Result<Json<serde_json::Value>, anyhow::Error> {
+pub async fn update_one(req: &mut Request, res: &mut Response, depot: &mut Depot) -> AppResult<Json<serde_json::Value>> {
     let app_config = depot.obtain::<AppConfig>().unwrap().clone();
     let data_dir = &app_config.data_dir;
     let file_path = req.param::<String>("f").unwrap();
@@ -119,11 +105,7 @@ pub async fn update_one(
 }
 
 #[handler]
-pub async fn delete_one(
-    req: &mut Request,
-    res: &mut Response,
-    depot: &mut Depot,
-) -> Result<Json<serde_json::Value>, anyhow::Error> {
+pub async fn delete_one(req: &mut Request, res: &mut Response, depot: &mut Depot) -> AppResult<Json<serde_json::Value>> {
     let app_config = depot.obtain::<AppConfig>().unwrap().clone();
     let data_dir = &app_config.data_dir;
 

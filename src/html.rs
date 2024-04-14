@@ -1,10 +1,11 @@
+use crate::utils::delete_collection_sync;
 use crate::AppConfig;
+use crate::errors::AppResult;
 use salvo::prelude::*;
 use std::path::PathBuf;
-use crate::utils::delete_collection_sync;
 
 #[handler]
-pub async fn index(res: &mut Response, depot: &mut Depot) -> Result<(), anyhow::Error> {
+pub async fn index(res: &mut Response, depot: &mut Depot) -> AppResult<()> {
     let app_config = depot.obtain::<AppConfig>().unwrap().clone();
     let data_dir = &app_config.data_dir;
 
@@ -104,11 +105,7 @@ pub async fn index(res: &mut Response, depot: &mut Depot) -> Result<(), anyhow::
 }
 
 #[handler]
-pub async fn delete_collection(
-    req: &mut Request,
-    res: &mut Response,
-    depot: &mut Depot,
-) {
+pub async fn delete_collection(req: &mut Request, res: &mut Response, depot: &mut Depot) {
     let app_config = depot.obtain::<AppConfig>().unwrap().clone();
     let data_dir = &app_config.data_dir;
     let file_path = req.param::<String>("f").unwrap();

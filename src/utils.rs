@@ -3,9 +3,10 @@ use std::io;
 use tokio::fs::OpenOptions;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
+use crate::errors::AppError;
+
 pub fn generate_random_id() -> u64 {
     let mut rng = rand::thread_rng();
-    // rng.gen_range(1..=u64::MAX)
     rng.gen_range(1..=100000)
 }
 
@@ -16,11 +17,7 @@ pub async fn read_json_from_file(data_dir: &str, f: &str) -> Result<String, io::
     Ok(json_string)
 }
 
-pub async fn get_item_by_id(
-    data_dir: &str,
-    file_path: &str,
-    id: u64,
-) -> Result<serde_json::Value, anyhow::Error> {
+pub async fn get_item_by_id(data_dir: &str, file_path: &str, id: u64) -> Result<serde_json::Value, AppError> {
     let json_string = match read_json_from_file(data_dir, file_path).await {
         Ok(s) => s,
         Err(_) => {
@@ -47,7 +44,7 @@ pub async fn get_item_by_id(
     if let Some(filtered_item) = filtered_item.first() {
         Ok(filtered_item.clone())
     } else {
-        anyhow::bail!("Item not found with ID: {}", id);
+        Err(AppError::ItemNotFound(id))
     }
 }
 
@@ -67,7 +64,7 @@ pub async fn add_item_to_json_file(
     data_dir: &str,
     file_name: &str,
     mut new_item: serde_json::Value,
-) -> Result<serde_json::Value, anyhow::Error> {
+) -> Result<serde_json::Value, AppError> {
     let json_string = match read_json_from_file(data_dir, file_name).await {
         Ok(s) => s,
         Err(_) => {
@@ -90,12 +87,7 @@ pub async fn add_item_to_json_file(
     Ok(new_item)
 }
 
-pub async fn update_json_file(
-    data_dir: &str,
-    f: &str,
-    id: u64,
-    updated_item: &serde_json::Value,
-) -> Result<bool, anyhow::Error> {
+pub async fn update_json_file(data_dir: &str, f: &str, id: u64, updated_item: &serde_json::Value) -> Result<bool, AppError> {
     let file_path = format!("{}/{}.json", data_dir, f);
     let json_string = match read_json_from_file(data_dir, f).await {
         Ok(s) => s,
@@ -120,11 +112,7 @@ pub async fn update_json_file(
     Ok(found_item)
 }
 
-pub async fn delete_from_json_file(
-    data_dir: &str,
-    f: &str,
-    id: u64,
-) -> Result<bool, anyhow::Error> {
+pub async fn delete_from_json_file(data_dir: &str, f: &str, id: u64) -> Result<bool, AppError> {
     let file_path = format!("{}/{}.json", data_dir, f);
     let json_string = match read_json_from_file(data_dir, f).await {
         Ok(s) => s,
@@ -158,15 +146,12 @@ pub async fn delete_from_json_file(
     Ok(found_item)
 }
 
-pub fn convert_string_to_json(json_string: &str) -> Result<serde_json::Value, anyhow::Error> {
+pub fn convert_string_to_json(json_string: &str) -> Result<serde_json::Value, serde_json::Error> {
     let json_value: serde_json::Value = serde_json::from_str(json_string)?;
     Ok(json_value)
 }
 
-pub async fn delete_collection_sync(
-    data_dir: &str,
-    f: &str,
-) -> Result<(), std::io::Error> {
+pub async fn delete_collection_sync(data_dir: &str, f: &str) -> Result<(), std::io::Error> {
     let file_path = format!("{}/{}.json", data_dir, f);
     tokio::fs::remove_file(file_path).await?;
 
