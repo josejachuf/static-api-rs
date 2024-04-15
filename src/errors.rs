@@ -1,6 +1,6 @@
-use thiserror::Error;
-use std::io;
 use salvo::prelude::*;
+use std::io;
+use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum AppError {
@@ -15,7 +15,6 @@ pub enum AppError {
 
     // #[error("Failed to generate random ID")]
     // RandomIdGeneration,
-
     #[error("Item not found with ID: {0}")]
     ItemNotFound(u64),
 }

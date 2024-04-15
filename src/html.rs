@@ -1,6 +1,6 @@
+use crate::errors::AppResult;
 use crate::utils::delete_collection_sync;
 use crate::AppConfig;
-use crate::errors::AppResult;
 use salvo::prelude::*;
 use std::path::PathBuf;
 

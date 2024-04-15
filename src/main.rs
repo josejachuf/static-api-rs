@@ -5,10 +5,10 @@ use salvo::cors::{self as cors, Cors};
 use salvo::prelude::*;
 use std::path::Path;
 
+mod errors;
 mod handlers;
 mod html;
 mod utils;
-mod errors;
 
 #[derive(Default, Clone, Debug)]
 pub struct AppConfig {
@@ -79,10 +79,7 @@ async fn main() {
     let router = Router::new()
         .hoop(affix::inject(app_config.clone()))
         .get(html::index)
-        .push(
-            Router::with_path("delete-collection/<f>")
-                .get(html::delete_collection)
-        )
+        .push(Router::with_path("delete-collection/<f>").get(html::delete_collection))
         .push(
             Router::with_path("api/<f>")
                 .hoop(cors_handler.clone())
@@ -97,7 +94,7 @@ async fn main() {
                 .get(handlers::get_one)
                 .put(handlers::update_one)
                 // .path(handlers::update_one)
-                .delete(handlers::delete_one)
+                .delete(handlers::delete_one),
         );
     let acceptor = TcpListener::new(format!("{host}:{port}")).bind().await;
     println!("Welcome to static-api!");

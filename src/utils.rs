@@ -17,7 +17,11 @@ pub async fn read_json_from_file(data_dir: &str, f: &str) -> Result<String, io::
     Ok(json_string)
 }
 
-pub async fn get_item_by_id(data_dir: &str, file_path: &str, id: u64) -> Result<serde_json::Value, AppError> {
+pub async fn get_item_by_id(
+    data_dir: &str,
+    file_path: &str,
+    id: u64,
+) -> Result<serde_json::Value, AppError> {
     let json_string = match read_json_from_file(data_dir, file_path).await {
         Ok(s) => s,
         Err(_) => {
@@ -87,7 +91,12 @@ pub async fn add_item_to_json_file(
     Ok(new_item)
 }
 
-pub async fn update_json_file(data_dir: &str, f: &str, id: u64, updated_item: &serde_json::Value) -> Result<bool, AppError> {
+pub async fn update_json_file(
+    data_dir: &str,
+    f: &str,
+    id: u64,
+    updated_item: &serde_json::Value,
+) -> Result<bool, AppError> {
     let file_path = format!("{}/{}.json", data_dir, f);
     let json_string = match read_json_from_file(data_dir, f).await {
         Ok(s) => s,
