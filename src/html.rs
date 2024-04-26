@@ -1,4 +1,4 @@
-use crate::errors::AppResult;
+use crate::error::AppResult;
 use crate::utils::delete_collection_sync;
 use crate::AppConfig;
 use salvo::prelude::*;

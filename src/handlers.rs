@@ -1,4 +1,4 @@
-use crate::errors::AppResult;
+use crate::error::AppResult;
 use crate::utils::{
     add_item_to_json_file, convert_string_to_json, create_empty_json_file, delete_from_json_file,
     get_item_by_id, read_json_from_file, update_json_file,

@@ -5,7 +5,7 @@ use salvo::cors::{self as cors, Cors};
 use salvo::prelude::*;
 use std::path::Path;
 
-mod errors;
+mod error;
 mod handlers;
 mod html;
 mod utils;

@@ -3,7 +3,7 @@ use std::io;
 use tokio::fs::OpenOptions;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
-use crate::errors::AppError;
+use crate::error::AppError;
 
 pub fn generate_random_id() -> u64 {
     let mut rng = rand::thread_rng();
