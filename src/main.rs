@@ -1,6 +1,6 @@
 use clap::{Arg, Command};
 
-use salvo::affix;
+// use salvo::affix;
 use salvo::cors::{self as cors, Cors};
 use salvo::prelude::*;
 use std::path::Path;
@@ -77,18 +77,18 @@ async fn main() {
         .into_handler();
 
     let router = Router::new()
-        .hoop(affix::inject(app_config.clone()))
+        .hoop(affix_state::inject(app_config.clone()))
         .get(html::index)
-        .push(Router::with_path("delete-collection/<f>").get(html::delete_collection))
+        .push(Router::with_path("delete-collection/{f}").get(html::delete_collection))
         .push(
-            Router::with_path("api/<f>")
+            Router::with_path("api/{f}")
                 .hoop(cors_handler.clone())
                 .options(handler::empty())
                 .get(handlers::get_all)
                 .post(handlers::add_one),
         )
         .push(
-            Router::with_path("api/<f>/<id>")
+            Router::with_path("api/{f}/{id}")
                 .hoop(cors_handler.clone())
                 .options(handler::empty())
                 .get(handlers::get_one)

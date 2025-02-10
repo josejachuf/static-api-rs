@@ -6,8 +6,8 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use crate::error::AppError;
 
 pub fn generate_random_id() -> u64 {
-    let mut rng = rand::thread_rng();
-    rng.gen_range(1..=100000)
+    let mut rng = rand::rng();
+    rng.random_range(1..=100000)
 }
 
 pub async fn read_json_from_file(data_dir: &str, f: &str) -> Result<String, io::Error> {
