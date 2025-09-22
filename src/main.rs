@@ -93,7 +93,6 @@ async fn main() {
                 .options(handler::empty())
                 .get(handlers::get_one)
                 .put(handlers::update_one)
-                // .path(handlers::update_one)
                 .delete(handlers::delete_one),
         );
     let acceptor = TcpListener::new(format!("{host}:{port}")).bind().await;

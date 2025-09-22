@@ -24,81 +24,201 @@ pub async fn index(res: &mut Response, depot: &mut Depot) -> AppResult<()> {
         .into_iter()
         .filter_map(|path| {
             path.file_stem().map(|stem| {
+                let stem_str = stem.to_string_lossy();
                 format!(
                     r#"
-<li class="columns is-gapless">
-  <div class="column is-6">
-    <a href="/api/{}" class="has-text-link is-size-5">{}</a>
-  </div>
-  <div class="column is-6">
-    <a href="/delete-collection/{}" class="button is-danger is-small">delete</a>
-  </div>
-</li>
-
+                    <div class="card mb-3">
+                      <div class="card-content">
+                        <div class="columns is-vcentered">
+                          <div class="column is-6">
+                            <span class="is-family-code has-text-link">/api/{stem}</span>
+                          </div>
+                          <div class="column is-6 has-text-right">
+                            <a href="/api/{stem}" target="_blank" class="button is-info is-light">Open</a>
+                            <button class="button is-danger is-light js-delete-btn" data-name="{stem}">
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                     "#,
-                    stem.to_string_lossy(),
-                    stem.to_string_lossy(),
-                    stem.to_string_lossy(),
+                    stem = stem_str
                 )
             })
         })
         .collect();
 
-    let html = format!(
-        r#"
-        <!DOCTYPE html>
-        <html>
-            <head>
-                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
-                <title>Static API</title>
-            </head>
-            <body>
-                <section class="section">
-                    <div class="container is-max-desktop">
-                        <section class="hero is-info mb-5">
-                          <div class="hero-body">
-                            <p class="title">
-                              Static-API
-                            </p>
-                            <p class="subtitle">
-                              A fake api for testing
-                            </p>
+
+let html = format!(
+    r#"
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+            <script>
+              document.addEventListener("DOMContentLoaded", () => {{
+                const modal = document.getElementById("delete-modal");
+                const modalBg = modal.querySelector(".modal-background");
+                const confirmBtn = modal.querySelector(".confirm-btn");
+                let currentTarget = "";
+
+                document.querySelectorAll(".js-delete-btn").forEach(btn => {{
+                  btn.addEventListener("click", () => {{
+                    currentTarget = btn.dataset.name;
+                    modal.classList.add("is-active");
+                  }});
+                }});
+
+                // Cerrar al hacer clic en el fondo
+                modalBg.addEventListener("click", () => modal.classList.remove("is-active"));
+
+                // Cerrar al hacer clic en cualquiera de los botones Cancel
+                modal.querySelectorAll(".cancel-btn").forEach(btn => {{
+                  btn.addEventListener("click", () => modal.classList.remove("is-active"));
+                }});
+
+                // Confirmación
+                confirmBtn.addEventListener("click", () => {{
+                  window.location.href = `/delete-collection/${{currentTarget}}`;
+                }});
+              }});
+            </script>
+
+
+            <title>Static API</title>
+        </head>
+
+        <body>
+            <section class="section">
+                <div class="container is-max-desktop">
+                    <section class="hero is-info mb-5">
+                      <div class="hero-body">
+                        <p class="title has-text-white">Static-API</p>
+                        <p class="subtitle has-text-white">A fake API for testing</p>
+                      </div>
+                    </section>
+
+                    <p class="has-text-justified">
+                      This is a simple application emulating a basic REST API.
+                      Each collection is represented as a JSON file in the file system.
+                    </p>
+
+                    <h3 class="title is-4 has-text-grey-dark mt-4">Collections</h3>
+
+                    {collections}
+
+                    <p>JSON files are stored in <strong>{data_dir}</strong></p>
+
+                    <h3 class="title is-4 has-text-grey-dark mt-4">Examples</h3>
+
+                    <div class="columns is-multiline">
+                      <!-- GET Collection -->
+                      <div class="column is-6">
+                        <div class="card">
+                          <header class="card-header">
+                            <p class="card-header-title">Get all items</p>
+                          </header>
+                          <div class="card-content">
+                            <code>curl -X GET http://localhost:5800/api/&lt;collection&gt;</code>
                           </div>
-                        </section>
-
-                        <p class="has-text-justified">This is a simple application emulating a basic REST API. It allows CRUD operations (Create, Read, Update, Delete) on different collections, where each collection is represented as a JSON file in the file system. If the collection does not exist, it is automatically created.</p>
-
-                        <h3 class="title is-4 has-text-grey-dark mt-4">Collections</h3>
-
-                        <div class="content">
-                            <ul>{}</ul>
                         </div>
+                      </div>
 
-                        <p>JSON files are stored in <strong>{data_dir}<strong></p>
-
-                        <h3 class="title is-4 has-text-grey-dark mt-4">Try something like</h3>
-
-                        <div class="box">
-                          <code class="is-family-code p-2">
-                            <p class="mb-4"><strong>curl -X GET</strong> http://localhost:5800/api/<span class="has-text-link">&lt;collection&gt;</span></p>
-                            <p class="mb-4"><strong>curl -X GET</strong> http://localhost:5800/api/<span class="has-text-link">&lt;collection&gt;</span>?skip=10&limit=5</p>
-                            <p class="mb-4"><strong>curl -X GET</strong> http://localhost:5800/api/<span class="has-text-link">&lt;collection&gt;</span>/<span class="has-text-link">&lt;id&gt;</span></p>
-                            <p class="mb-4"><strong>curl -X POST</strong> -H "Content-Type: application/json" -d '{{"field1":"value1", "field2":"value2"}}' http://localhost:5800/api/<span class="has-text-link">&lt;collection&gt;</span></p>
-                            <p class="mb-4"><strong>curl -X PUT</strong> -H "Content-Type: application/json" -d '{{"field1":"new_value1", "new_field2":"value2"}}' http://localhost:5800/api/<span class="has-text-link">&lt;collection&gt;</span>/<span class="has-text-link">&lt;id&gt;</span></p>
-                            <p class="mb-4"><strong>curl -X DELETE</strong> http://localhost:5800/api/<span class="has-text-link">&lt;collection&gt;</span>/<span class="has-text-link">&lt;id&gt;</span></p>
-                          </code>
+                      <!-- GET with pagination -->
+                      <div class="column is-6">
+                        <div class="card">
+                          <header class="card-header">
+                            <p class="card-header-title">Get with skip &amp; limit</p>
+                          </header>
+                          <div class="card-content">
+                            <code>curl -X GET "http://localhost:5800/api/&lt;collection&gt;?skip=10&amp;limit=5"</code>
+                          </div>
                         </div>
+                      </div>
 
+                      <!-- GET by ID -->
+                      <div class="column is-6">
+                        <div class="card">
+                          <header class="card-header">
+                            <p class="card-header-title">Get by ID</p>
+                          </header>
+                          <div class="card-content">
+                            <code>curl -X GET http://localhost:5800/api/&lt;collection&gt;/&lt;id&gt;</code>
+                          </div>
+                        </div>
+                      </div>
 
+                      <!-- POST new item -->
+                      <div class="column is-6">
+                        <div class="card">
+                          <header class="card-header">
+                            <p class="card-header-title">Create (POST)</p>
+                          </header>
+                          <div class="card-content">
+                            <code>
+                              curl -X POST -H "Content-Type: application/json" \<br>
+                              -d '{{"field1":"value1","field2":"value2"}}' \<br>
+                              http://localhost:5800/api/&lt;collection&gt;
+                            </code>
+                          </div>
+                        </div>
+                      </div>
 
+                      <!-- PUT update -->
+                      <div class="column is-6">
+                        <div class="card">
+                          <header class="card-header">
+                            <p class="card-header-title">Update (PUT)</p>
+                          </header>
+                          <div class="card-content">
+                            <code>
+                              curl -X PUT -H "Content-Type: application/json" \<br>
+                              -d '{{"field1":"new_value1","new_field2":"value2"}}' \<br>
+                              http://localhost:5800/api/&lt;collection&gt;/&lt;id&gt;
+                            </code>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- DELETE by ID -->
+                      <div class="column is-6">
+                        <div class="card">
+                          <header class="card-header">
+                            <p class="card-header-title">Delete by ID</p>
+                          </header>
+                          <div class="card-content">
+                            <code>curl -X DELETE http://localhost:5800/api/&lt;collection&gt;/&lt;id&gt;</code>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                </section>
+                </div>
+            </section>
 
-            </body>
-        </html>
-        "#,
-        data_files.join("")
-    );
+            <!-- Modal confirmación -->
+            <div id="delete-modal" class="modal">
+              <div class="modal-background"></div>
+              <div class="modal-card">
+                <header class="modal-card-head">
+                  <p class="modal-card-title">Confirm delete</p>
+                  <button class="delete cancel-btn" aria-label="close"></button>
+                </header>
+                <section class="modal-card-body">
+                  <p>Are you sure you want to delete this collection?</p>
+                </section>
+                <footer class="modal-card-foot">
+                  <button class="button is-danger confirm-btn">Yes, delete</button>
+                  <button class="button cancel-btn">Cancel</button>
+                </footer>
+              </div>
+            </div>
+
+        </body>
+    </html>
+    "#,
+    collections = data_files.join("")
+);
 
     res.render(Text::Html(html));
     Ok(())
