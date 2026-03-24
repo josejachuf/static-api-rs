@@ -1,4 +1,4 @@
-use rand::Rng;
+use rand::RngExt;
 use std::io;
 use tokio::fs::OpenOptions;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
