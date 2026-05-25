@@ -17,6 +17,9 @@ pub enum AppError {
     // RandomIdGeneration,
     #[error("Item not found with ID: {0}")]
     ItemNotFound(u64),
+
+    #[error("internal error: `{0}`")]
+    Internal(String),
 }
 
 pub type AppResult<T> = Result<T, AppError>;

@@ -30,26 +30,14 @@ pub async fn get_item_by_id(
         }
     };
     let json_value = convert_string_to_json(&json_string)?;
-
-    let filtered_item = json_value
+    let arr = json_value
         .as_array()
-        .unwrap()
-        .iter()
-        .filter(|item| {
-            if let Some(item_id) = item["id"].as_u64() {
-                item_id == id
-            } else {
-                false
-            }
-        })
-        .cloned()
-        .collect::<Vec<serde_json::Value>>();
+        .ok_or_else(|| AppError::Internal("expected JSON array".into()))?;
 
-    if let Some(filtered_item) = filtered_item.first() {
-        Ok(filtered_item.clone())
-    } else {
-        Err(AppError::ItemNotFound(id))
-    }
+    arr.iter()
+        .find(|item| item["id"].as_u64() == Some(id))
+        .cloned()
+        .ok_or(AppError::ItemNotFound(id))
 }
 
 pub async fn create_empty_json_file(data_dir: &str, f: &str) -> Result<(), io::Error> {
@@ -77,12 +65,15 @@ pub async fn add_item_to_json_file(
         }
     };
     let mut json_value = convert_string_to_json(&json_string)?;
+    let arr = json_value
+        .as_array_mut()
+        .ok_or_else(|| AppError::Internal("expected JSON array".into()))?;
 
     if new_item.get("id").is_none() {
         new_item["id"] = serde_json::Value::from(generate_random_id());
     }
 
-    json_value.as_array_mut().unwrap().push(new_item.clone());
+    arr.push(new_item.clone());
 
     let json_string = serde_json::to_string_pretty(&json_value)?;
     let file_path = format!("{}/{}.json", data_dir, file_name);
@@ -104,21 +95,52 @@ pub async fn update_json_file(
     };
 
     let mut json_value = convert_string_to_json(&json_string)?;
-    let mut found_item = false;
+    let arr = json_value
+        .as_array_mut()
+        .ok_or_else(|| AppError::Internal("expected JSON array".into()))?;
 
-    if let Some(index) = json_value
-        .as_array()
-        .unwrap()
-        .iter()
-        .position(|item| item["id"].as_u64() == Some(id))
-    {
-        json_value.as_array_mut().unwrap()[index] = updated_item.clone();
-
+    if let Some(index) = arr.iter().position(|item| item["id"].as_u64() == Some(id)) {
+        arr[index] = updated_item.clone();
         let json_string = serde_json::to_string_pretty(&json_value)?;
         tokio::fs::write(file_path, json_string).await?;
-        found_item = true;
+        Ok(true)
+    } else {
+        Ok(false)
     }
-    Ok(found_item)
+}
+
+pub async fn patch_json_file(
+    data_dir: &str,
+    f: &str,
+    id: u64,
+    patch: &serde_json::Value,
+) -> Result<Option<serde_json::Value>, AppError> {
+    let file_path = format!("{}/{}.json", data_dir, f);
+    let json_string = match read_json_from_file(data_dir, f).await {
+        Ok(s) => s,
+        Err(_) => return Ok(None),
+    };
+
+    let mut json_value = convert_string_to_json(&json_string)?;
+    let arr = json_value
+        .as_array_mut()
+        .ok_or_else(|| AppError::Internal("expected JSON array".into()))?;
+
+    if let Some(index) = arr.iter().position(|item| item["id"].as_u64() == Some(id)) {
+        if let (Some(existing), Some(patch_obj)) =
+            (arr[index].as_object_mut(), patch.as_object())
+        {
+            for (k, v) in patch_obj {
+                existing.insert(k.clone(), v.clone());
+            }
+        }
+        let updated = arr[index].clone();
+        let json_string = serde_json::to_string_pretty(&json_value)?;
+        tokio::fs::write(file_path, json_string).await?;
+        Ok(Some(updated))
+    } else {
+        Ok(None)
+    }
 }
 
 pub async fn delete_from_json_file(data_dir: &str, f: &str, id: u64) -> Result<bool, AppError> {
@@ -129,20 +151,17 @@ pub async fn delete_from_json_file(data_dir: &str, f: &str, id: u64) -> Result<b
     };
 
     let json_value = convert_string_to_json(&json_string)?;
-    let mut found_item = false;
-
-    let filtered_items: Vec<serde_json::Value> = json_value
+    let arr = json_value
         .as_array()
-        .unwrap()
+        .ok_or_else(|| AppError::Internal("expected JSON array".into()))?;
+
+    let mut found = false;
+    let filtered: Vec<serde_json::Value> = arr
         .iter()
         .filter(|item| {
-            if let Some(item_id) = item["id"].as_u64() {
-                if item_id != id {
-                    true
-                } else {
-                    found_item = true;
-                    false
-                }
+            if item["id"].as_u64() == Some(id) {
+                found = true;
+                false
             } else {
                 true
             }
@@ -150,9 +169,9 @@ pub async fn delete_from_json_file(data_dir: &str, f: &str, id: u64) -> Result<b
         .cloned()
         .collect();
 
-    let json_string = serde_json::to_string_pretty(&filtered_items)?;
+    let json_string = serde_json::to_string_pretty(&filtered)?;
     tokio::fs::write(file_path, json_string).await?;
-    Ok(found_item)
+    Ok(found)
 }
 
 pub fn convert_string_to_json(json_string: &str) -> Result<serde_json::Value, serde_json::Error> {
@@ -163,6 +182,5 @@ pub fn convert_string_to_json(json_string: &str) -> Result<serde_json::Value, se
 pub async fn delete_collection_sync(data_dir: &str, f: &str) -> Result<(), std::io::Error> {
     let file_path = format!("{}/{}.json", data_dir, f);
     tokio::fs::remove_file(file_path).await?;
-
     Ok(())
 }

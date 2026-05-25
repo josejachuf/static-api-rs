@@ -4,84 +4,117 @@ This is a simple application emulating a basic REST API. It allows CRUD operatio
 
 <img width="1087" height="943" alt="imagen" src="https://github.com/user-attachments/assets/11992c23-d139-458e-a795-8dab59bda0ef" />
 
+This becomes particularly handy during front-end development, especially when the back-end is still in the process of being developed.
 
-This becomes particularly handy during front-end development, especially when the back-end is still in the process of being develop.
-
-By default, the app will listen on localhost:5800. If you need to change the HOST and PORT, you can pass the values as arguments. See below for the use of arguments.
-
-Enter http://localhost:5800 to see the available collections.
+By default, the app will listen on `localhost:5800`. Visit `http://localhost:5800` to see the available collections and usage examples.
 
 ## Endpoints
 
-### Get all items in a collection (GET ALL)
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/<collection>` | List items |
+| POST | `/api/<collection>` | Create item |
+| GET | `/api/<collection>/<id>` | Get item by ID |
+| PUT | `/api/<collection>/<id>` | Replace item |
+| PATCH | `/api/<collection>/<id>` | Partial update |
+| DELETE | `/api/<collection>/<id>` | Delete item |
+
+### Get all items (GET)
 
 ```bash
-curl -X GET http://localhost:5800/api/<collection>
-
+curl http://localhost:5800/api/<collection>
 ```
 
-**Note**: by default you will get 30 results, you can pass "skip" & "limit" query string to get more results.
-For example:
+Returns up to 30 items by default. Use `skip` and `limit` to paginate:
 
 ```bash
-curl -X GET http://localhost:5800/api/<collection>?skip=10&limit=5
+curl "http://localhost:5800/api/<collection>?skip=10&limit=5"
 ```
 
-Will discard the initial 10 elements and only transmit the remaining 5.
+#### Filtering
 
-### Get a specific item by ID (GET ONE)
-```bash
-curl -X GET http://localhost:5800/api/<collection>/<id>
-```
-
-### Add item in a collection (POST)
+Filter by any field value using query parameters:
 
 ```bash
-curl -X POST -H "Content-Type: application/json" -d '{"field1":"value1", "field2":"value2"}' http://localhost:5800/api/<collection>
+curl "http://localhost:5800/api/<collection>?status=active"
+curl "http://localhost:5800/api/<collection>?role=admin&status=active"
 ```
 
-### Update a specific item by ID (PUT)
+Supported field types: strings, numbers, booleans.
+
+#### Sorting
+
+Sort results with `_sort` and `_order` (`asc` by default):
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"field1":"new_value1", "field2":"new_value2"}' http://localhost:5800/api/<collection>/<id>
+curl "http://localhost:5800/api/<collection>?_sort=name&_order=asc"
+curl "http://localhost:5800/api/<collection>?_sort=age&_order=desc"
 ```
 
-### Delete a specific item by ID (DELETE)
+Filters, sorting and pagination can be combined:
+
+```bash
+curl "http://localhost:5800/api/<collection>?status=active&_sort=name&skip=0&limit=10"
+```
+
+#### Response format
+
+```json
+{
+  "data": [...],
+  "total": 42,
+  "limit": 10,
+  "skip": 0
+}
+```
+
+`total` reflects the count after filtering, before pagination.
+
+### Get item by ID (GET)
+
+```bash
+curl http://localhost:5800/api/<collection>/<id>
+```
+
+### Create item (POST)
+
+If no `id` field is provided, one is generated automatically.
+
+```bash
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"name":"New Item", "value":42}' \
+  http://localhost:5800/api/<collection>
+```
+
+Returns `201 Created` with the new item.
+
+### Replace item (PUT)
+
+Replaces the entire item with the provided body.
+
+```bash
+curl -X PUT -H "Content-Type: application/json" \
+  -d '{"name":"Updated Item", "value":99}' \
+  http://localhost:5800/api/<collection>/<id>
+```
+
+### Partial update (PATCH)
+
+Merges the provided fields into the existing item, leaving the rest unchanged.
+
+```bash
+curl -X PATCH -H "Content-Type: application/json" \
+  -d '{"status":"inactive"}' \
+  http://localhost:5800/api/<collection>/<id>
+```
+
+### Delete item (DELETE)
 
 ```bash
 curl -X DELETE http://localhost:5800/api/<collection>/<id>
 ```
 
-## Examples
-### Create a new item in a collection
-
-```bash
-curl -X POST -H "Content-Type: application/json" -d '{"name":"New Item", "value":42}' http://localhost:5800/api/example
-```
-
-### Get all items in a collection
-
-```bash
-curl -X GET http://localhost:5800/api/example
-```
-
-### Get a specific item by ID
-
-```bash
-curl -X GET http://localhost:5800/api/example/1
-```
-
-### Update a specific item by ID
-
-```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"name":"Updated Item", "value":99}' http://localhost:5800/api/example/1
-```
-
-### Delete a specific item by ID
-
-```bash
-curl -X DELETE http://localhost:5800/api/example/1
-```
+Returns `204 No Content` on success, `404 Not Found` if the item does not exist.
 
 ## Arguments
 
@@ -89,13 +122,17 @@ curl -X DELETE http://localhost:5800/api/example/1
 Usage: static-api [OPTIONS]
 
 Options:
-  -i, --host <HOST>     IP address of the server [default: localhost]
+  -i, --host <HOST>     IP address of the server [default: 127.0.0.1]
   -p, --port <PORT>     Port that will listen to the server [default: 5800]
   -h, --help            Print help
 ```
 
 Example:
 
-./static-api --port 5555 --host 0.0.0.0
+```bash
+./static-api --host 0.0.0.0 --port 5555
+```
 
-http://0.0.0.0:5555
+## Data storage
+
+Collections are stored as JSON files in `~/.static-api/`. Each file is named `<collection>.json` and contains an array of objects.

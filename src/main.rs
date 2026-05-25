@@ -17,7 +17,9 @@ pub struct AppConfig {
 
 async fn init(data_dir: &str) {
     if !Path::new(data_dir).exists() {
-        std::fs::create_dir(data_dir).unwrap();
+        if let Err(e) = std::fs::create_dir(data_dir) {
+            eprintln!("Failed to create data directory '{data_dir}': {e}");
+        }
     }
 }
 
@@ -93,6 +95,7 @@ async fn main() {
                 .options(handler::empty())
                 .get(handlers::get_one)
                 .put(handlers::update_one)
+                .patch(handlers::patch_one)
                 .delete(handlers::delete_one),
         );
     let acceptor = TcpListener::new(format!("{host}:{port}")).bind().await;

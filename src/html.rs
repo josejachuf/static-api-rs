@@ -6,7 +6,10 @@ use std::path::PathBuf;
 
 #[handler]
 pub async fn index(res: &mut Response, depot: &mut Depot) -> AppResult<()> {
-    let app_config = depot.obtain::<AppConfig>().unwrap().clone();
+    let app_config = depot
+        .obtain::<AppConfig>()
+        .map_err(|_| crate::error::AppError::Internal("missing app config".into()))?
+        .clone();
     let data_dir = &app_config.data_dir;
 
     let mut data_content = tokio::fs::read_dir(data_dir).await?;
@@ -169,12 +172,28 @@ let html = format!(
                       <div class="column is-6">
                         <div class="card">
                           <header class="card-header">
-                            <p class="card-header-title">Update (PUT)</p>
+                            <p class="card-header-title">Replace (PUT)</p>
                           </header>
                           <div class="card-content">
                             <code>
                               curl -X PUT -H "Content-Type: application/json" \<br>
-                              -d '{{"field1":"new_value1","new_field2":"value2"}}' \<br>
+                              -d '{{"field1":"new_value1","field2":"value2"}}' \<br>
+                              http://localhost:5800/api/&lt;collection&gt;/&lt;id&gt;
+                            </code>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- PATCH partial update -->
+                      <div class="column is-6">
+                        <div class="card">
+                          <header class="card-header">
+                            <p class="card-header-title">Partial update (PATCH)</p>
+                          </header>
+                          <div class="card-content">
+                            <code>
+                              curl -X PATCH -H "Content-Type: application/json" \<br>
+                              -d '{{"field1":"new_value"}}' \<br>
                               http://localhost:5800/api/&lt;collection&gt;/&lt;id&gt;
                             </code>
                           </div>
@@ -189,6 +208,30 @@ let html = format!(
                           </header>
                           <div class="card-content">
                             <code>curl -X DELETE http://localhost:5800/api/&lt;collection&gt;/&lt;id&gt;</code>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Filter -->
+                      <div class="column is-6">
+                        <div class="card">
+                          <header class="card-header">
+                            <p class="card-header-title">Filter by field</p>
+                          </header>
+                          <div class="card-content">
+                            <code>curl "http://localhost:5800/api/&lt;collection&gt;?status=active&amp;role=admin"</code>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Sort -->
+                      <div class="column is-6">
+                        <div class="card">
+                          <header class="card-header">
+                            <p class="card-header-title">Sort</p>
+                          </header>
+                          <div class="card-content">
+                            <code>curl "http://localhost:5800/api/&lt;collection&gt;?_sort=name&amp;_order=asc"</code>
                           </div>
                         </div>
                       </div>
@@ -226,11 +269,19 @@ let html = format!(
 
 #[handler]
 pub async fn delete_collection(req: &mut Request, res: &mut Response, depot: &mut Depot) {
-    let app_config = depot.obtain::<AppConfig>().unwrap().clone();
+    let app_config = match depot.obtain::<AppConfig>() {
+        Ok(c) => c.clone(),
+        Err(_) => return,
+    };
     let data_dir = &app_config.data_dir;
-    let file_path = req.param::<String>("f").unwrap();
+    let file_path = match req.param::<String>("f") {
+        Some(f) => f,
+        None => return,
+    };
 
-    delete_collection_sync(data_dir, &file_path).await.unwrap();
+    if let Err(e) = delete_collection_sync(data_dir, &file_path).await {
+        eprintln!("Failed to delete collection '{file_path}': {e}");
+    }
 
     res.render(Redirect::other("/"));
 }
