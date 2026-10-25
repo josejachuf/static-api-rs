@@ -33,7 +33,7 @@ fn compare_json_values(a: &serde_json::Value, b: &serde_json::Value) -> Ordering
 #[handler]
 pub async fn get_all(req: &mut Request, depot: &mut Depot) -> AppResult<Json<ApiResponse>> {
     let app_config = depot
-        .obtain::<AppConfig>()
+        .get_typed::<AppConfig>()
         .map_err(|_| AppError::Internal("missing app config".into()))?
         .clone();
     let data_dir = &app_config.data_dir;
@@ -123,7 +123,7 @@ pub async fn get_one(
     depot: &mut Depot,
 ) -> AppResult<Json<serde_json::Value>> {
     let app_config = depot
-        .obtain::<AppConfig>()
+        .get_typed::<AppConfig>()
         .map_err(|_| AppError::Internal("missing app config".into()))?
         .clone();
     let data_dir = &app_config.data_dir;
@@ -150,7 +150,7 @@ pub async fn add_one(
     depot: &mut Depot,
 ) -> AppResult<Json<serde_json::Value>> {
     let app_config = depot
-        .obtain::<AppConfig>()
+        .get_typed::<AppConfig>()
         .map_err(|_| AppError::Internal("missing app config".into()))?
         .clone();
     let data_dir = &app_config.data_dir;
@@ -171,7 +171,7 @@ pub async fn update_one(
     depot: &mut Depot,
 ) -> AppResult<Json<serde_json::Value>> {
     let app_config = depot
-        .obtain::<AppConfig>()
+        .get_typed::<AppConfig>()
         .map_err(|_| AppError::Internal("missing app config".into()))?
         .clone();
     let data_dir = &app_config.data_dir;
@@ -200,7 +200,7 @@ pub async fn patch_one(
     depot: &mut Depot,
 ) -> AppResult<Json<serde_json::Value>> {
     let app_config = depot
-        .obtain::<AppConfig>()
+        .get_typed::<AppConfig>()
         .map_err(|_| AppError::Internal("missing app config".into()))?
         .clone();
     let data_dir = &app_config.data_dir;
@@ -229,7 +229,7 @@ pub async fn delete_one(
     depot: &mut Depot,
 ) -> AppResult<Json<serde_json::Value>> {
     let app_config = depot
-        .obtain::<AppConfig>()
+        .get_typed::<AppConfig>()
         .map_err(|_| AppError::Internal("missing app config".into()))?
         .clone();
     let data_dir = &app_config.data_dir;

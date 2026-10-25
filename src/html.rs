@@ -7,7 +7,7 @@ use std::path::PathBuf;
 #[handler]
 pub async fn index(res: &mut Response, depot: &mut Depot) -> AppResult<()> {
     let app_config = depot
-        .obtain::<AppConfig>()
+        .get_typed::<AppConfig>()
         .map_err(|_| crate::error::AppError::Internal("missing app config".into()))?
         .clone();
     let data_dir = &app_config.data_dir;
@@ -269,7 +269,7 @@ let html = format!(
 
 #[handler]
 pub async fn delete_collection(req: &mut Request, res: &mut Response, depot: &mut Depot) {
-    let app_config = match depot.obtain::<AppConfig>() {
+    let app_config = match depot.get_typed::<AppConfig>() {
         Ok(c) => c.clone(),
         Err(_) => return,
     };
